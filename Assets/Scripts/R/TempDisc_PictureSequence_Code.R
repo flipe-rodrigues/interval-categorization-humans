@@ -4,14 +4,12 @@
 #-#--#-#-#-##-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 library(lubridate)
 
-save.image(file="TempDisc_PictureSequence.RData")
-
-# to open
-load(file="TempDisc_PictureSequence.RData") 
-
-
 # Read the input data
-full_results <- data.frame(read.csv(file.choose(), sep = ";", dec = ",", header = TRUE))  # TempDisc_PictureSequence_Input
+current_dir <- "F:/Documents/GitHub/Unity/interval-categorization-humans/Assets/Scripts/R"
+file_name <- "TempDisc_PictureSequence_Input.csv"
+input_path <- file.path(current_dir, file_name)
+#full_results <- data.frame(read.csv(file.choose(), sep = ";", dec = ",", header = TRUE))  # TempDisc_PictureSequence_Input
+full_results <- data.frame(read.csv(input_path, sep = ";", dec = ",", header = TRUE))  # TempDisc_PictureSequence_Input
 picture_info <- full_results[, c(1:2)]
 colnames(picture_info) <- c("PictureType", "file_name")
 
@@ -53,7 +51,8 @@ generate_training_sequence <- function(picture_info) {
   
   phase1 <- data.frame(
     file_name = rep(training_neutral_pictures[1:2], each = 5),
-    duration = phase1_durations
+    duration = phase1_durations,
+    phase = 1
   )
   
   # Phase 2: Intermediate times, randomized durations and pictures
@@ -70,7 +69,8 @@ generate_training_sequence <- function(picture_info) {
   
   phase2 <- data.frame(
     file_name = phase2_pictures,
-    duration = phase2_durations
+    duration = phase2_durations,
+    phase = 2
   )
   
   # Return phase 1 and phase 2 separately
@@ -108,7 +108,11 @@ generate_test_sequence <- function(picture_info, picture_counts, occurrences, du
     pictures_rep <- sample(rep(picture_set, length.out = length(durations_rep)))
     durations_rep <- rep(durations_rep, length.out = length(pictures_rep))
     
-    sequence <- data.frame(file_name = pictures_rep, duration = durations_rep)
+    sequence <- data.frame(
+      file_name = pictures_rep,
+      duration = durations_rep,
+      phase = 3
+      )
     test_sequence <- rbind(test_sequence, sequence)
   }
   
@@ -144,7 +148,9 @@ combine_sequences <- function(phase1, phase2, test_sequence) {
   return(final_sequence)
 }
 
-num_sequences <- 100
+num_sequences <- 1000
+
+pb <- txtProgressBar(min = 0, max = num_sequences, style = 3)
 
 for (i in 1:num_sequences) {
 
@@ -154,14 +160,19 @@ for (i in 1:num_sequences) {
   phase2 <- training_sequences$phase2
   test_sequence <- generate_test_sequence(picture_info, picture_counts, occurrences, durations)
   final_sequence <- combine_sequences(phase1, phase2, test_sequence)
-  
-  # Print the final sequence
-  print(final_sequence, row.names=FALSE)
-  
-  #Save
+
+  # Save
   timestamp <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
   file_name <- paste0("image_sequence_", timestamp, ".csv")
-  save_dir = "F:/Documents/Unity/Interval categorization task/Assets/Resources/Image Sequences"
+  save_dir = "F:/Documents/GitHub/Unity/interval-categorization-humans/Assets/Resources/Image Sequences"
   full_path <- file.path(save_dir, file_name)
   write.csv(final_sequence, file = full_path, row.names = FALSE)
+  
+  # Update progress bar
+  setTxtProgressBar(pb, i)
 }
+
+close(pb)
+
+# Print the final sequence
+print(final_sequence, row.names=FALSE)

@@ -8,6 +8,7 @@ public class TaskManager : Singleton<TaskManager>
     public bool AwaitingChoice { get; private set; }
     public int TrialCounter { get; private set; }
     public int ValidTrialCounter { get; private set; }
+    public Phase Phase => stimulusPanel.CurrentStimulus.Phase;
 
     // Public fields
     public float categoryBoundary = 1f;
@@ -21,14 +22,48 @@ public class TaskManager : Singleton<TaskManager>
     public StimulusPanelBhv stimulusPanel;
     public FeedbackBhv feedbackPanel;
     public TrajectoryTracker trajectoryTracker;
+    public enum InputMode
+    {
+        Mouse,
+        Keyboard
+    }
+    public InputMode inputMode;
 
     // Private fieldss
     private WriteData2CSV _fileHandler;
     private bool _ongoingTrial;
+    private bool _abortedPreviousTrial;
 
     private void Start()
     {
         _fileHandler = this.GetComponent<WriteData2CSV>();
+
+        this.HandleTaskVariantAssignment();
+    }
+
+    private void HandleTaskVariantAssignment()
+    {
+        if (UIManager.subjectCode == null)
+        {
+            return;
+        }
+
+        if (UIManager.subjectCode.Contains("I"))        // "I" for "Initiation"
+        {
+            isInitiationRequired = true;
+        }
+        else if (UIManager.subjectCode.Contains("P"))   // "P" for "Passive"
+        {
+            isInitiationRequired = false;
+        }
+        if (UIManager.subjectCode.Contains("M"))        // "M" for "Mouse"
+        {
+            inputMode = InputMode.Mouse;
+        }
+        else if (UIManager.subjectCode.Contains("K"))   // "K" for "Keyboard"
+        {
+            inputMode = InputMode.Keyboard;
+        }
     }
 
     private void Update()
@@ -73,6 +108,16 @@ public class TaskManager : Singleton<TaskManager>
                 stimulusPanel.LightsOff();
 
                 feedbackPanel.Abort();
+
+                if (_abortedPreviousTrial)
+                {
+                    stimulusPanel.StimulusIndex++;
+                }
+
+                if (!_abortedPreviousTrial)
+                {
+                    _abortedPreviousTrial = true;
+                }
 
                 _fileHandler.WriteBhvTrial(duration, -1, -1, -1, -1, stimulusPanel.GetImgName());
                 _fileHandler.WriteTrackingTrial();
@@ -158,7 +203,9 @@ public class TaskManager : Singleton<TaskManager>
 
         this.ValidTrialCounter++;
 
-        stimulusPanel.RemovePreviousStimulus();
+        stimulusPanel.StimulusIndex++;
+        //stimulusPanel.RemovePreviousStimulus();
+        _abortedPreviousTrial = false;
 
         float iti = interTrialInterval + timePenalty * choiceCorrect;
 

@@ -376,6 +376,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f52ea2fc9fba17a45820ed7f36ab50e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  assignedKey: 32
   relaxSpeed: 1
   changeSpeed: 2
   maxLightIntensity: 0.1
@@ -942,6 +943,7 @@ MonoBehaviour:
   stimulusPanel: {fileID: 1771643206}
   feedbackPanel: {fileID: 1129725366}
   trajectoryTracker: {fileID: 1334734754}
+  inputMode: 1
 --- !u!114 &625718017
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1676,6 +1678,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f52ea2fc9fba17a45820ed7f36ab50e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  assignedKey: 107
   relaxSpeed: 1
   changeSpeed: 2
   maxLightIntensity: 0.1
@@ -2419,6 +2422,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f52ea2fc9fba17a45820ed7f36ab50e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  assignedKey: 100
   relaxSpeed: 1
   changeSpeed: 2
   maxLightIntensity: 0.1
@@ -2561,6 +2565,10 @@ MonoBehaviour:
   positiveFeedbackTexture: {fileID: 2800000, guid: 111189f442327b344a4e60cdedcaf488,
     type: 3}
   negativeFeedbackTexture: {fileID: 2800000, guid: 2e51efbe8a7a7184ba53fe9d82584cec,
+    type: 3}
+  abortFeedbackTexture: {fileID: 2800000, guid: 117428e24a775294fad00ed640a6d504,
+    type: 3}
+  unknownFeedbackTexture: {fileID: 2800000, guid: a43f86e4f65d62345884315a4521a060,
     type: 3}
 --- !u!23 &1129725367
 MeshRenderer:
@@ -2948,10 +2956,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 885ce8d8e08893a4c8c25306abdc7203, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _currentImageSequenceFile: {fileID: 0}
+  _stimulusIndex: 0
   _currentStimulus:
     _image: {fileID: 0}
     _duration: 0
+    _phase: 0
   _allStimuli: []
 --- !u!1 &1902735416
 GameObject:

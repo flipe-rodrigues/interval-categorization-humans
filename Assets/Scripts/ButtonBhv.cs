@@ -22,6 +22,13 @@ public class ButtonBhv : MonoBehaviour
         set { _labelRenderer.material.SetColor("_EmissionColor", value); }
     }
 
+    public enum Keys
+    {
+        D = KeyCode.D,
+        Spacebar = KeyCode.Space,
+        K = KeyCode.K
+    }
+    public Keys assignedKey = Keys.D;
     [Range(0, 100)]
     public float relaxSpeed = 1;
     [Range(1, 5)]
@@ -65,6 +72,21 @@ public class ButtonBhv : MonoBehaviour
         this.LabelEmissionColor = this.MainEmissionColor;
         _light.intensity = Mathf.Lerp(_light.intensity, _targetIntensity, lerpSpeed);
         this.Relax();
+
+        if (TaskManager.Instance.inputMode == TaskManager.InputMode.Keyboard)
+        {
+            if (Input.GetKeyDown((KeyCode)assignedKey))
+            {
+                _rigidbody.AddForce(Vector3.down * .75f, ForceMode.Impulse);
+                _pressing = true;
+            }
+
+            if (Input.GetKeyUp((KeyCode)assignedKey))
+            {
+
+                _pressing = false;
+            }
+        }
     }
 
     public void LightsOn()
@@ -102,22 +124,42 @@ public class ButtonBhv : MonoBehaviour
 
     private void OnMouseEnter()
     {
+        if (TaskManager.Instance.inputMode != TaskManager.InputMode.Mouse)
+        {
+            return;
+        }
+
         this.ContactBegin();
     }
 
     private void OnMouseExit()
     {
+        if (TaskManager.Instance.inputMode != TaskManager.InputMode.Mouse)
+        {
+            return;
+        }
+
         this.ContactEnd();
     }
 
     private void OnMouseDown()
     {
+        if (TaskManager.Instance.inputMode != TaskManager.InputMode.Mouse)
+        {
+            return;
+        }
+
         _rigidbody.AddForce(Vector3.down * .75f, ForceMode.Impulse);
         _pressing = true;
     }
 
     private void OnMouseUp()
     {
+        if (TaskManager.Instance.inputMode != TaskManager.InputMode.Mouse)
+        {
+            return;
+        }
+
         _pressing = false;
     }
 }

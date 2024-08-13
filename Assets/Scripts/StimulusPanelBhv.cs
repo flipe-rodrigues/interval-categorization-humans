@@ -9,8 +9,9 @@ using Leap.Unity;
 using static LeapInternal.Connection;
 using LeapInternal;
 
-public class StimulusPanelBhv : MonoBehaviour {
-
+public class StimulusPanelBhv : MonoBehaviour
+{
+    public int StimulusIndex { get { return _stimulusIndex; } set { _stimulusIndex = value; } }
     public Stimulus CurrentStimulus { get { return _currentStimulus; } }
     private Color EmissionColor
     {
@@ -20,7 +21,7 @@ public class StimulusPanelBhv : MonoBehaviour {
 
     private Transform _transform;
     private Renderer _renderer;
-    [SerializeField] private TextAsset _currentImageSequenceFile;
+    [SerializeField] private int _stimulusIndex = 0;
     [SerializeField] private Stimulus _currentStimulus;
     [SerializeField] private List<Stimulus> _allStimuli;
 
@@ -47,7 +48,8 @@ public class StimulusPanelBhv : MonoBehaviour {
 
         // Select a random CSV file
         TextAsset csvFile = csvFiles[Random.Range(0, csvFiles.Length)];
-        _currentImageSequenceFile = csvFile;
+
+        csvFile = Resources.Load<TextAsset>(Path.Combine("Image Sequences", "image_sequence_TEST")); // !!!!!!!!!!! REMOVE !!!!!!!!!!!!!!
 
         // Read the CSV file contents
         StringReader reader = new StringReader(csvFile.text);
@@ -70,8 +72,8 @@ public class StimulusPanelBhv : MonoBehaviour {
             Dictionary<string, string> entry = new Dictionary<string, string>();
             for (int i = 0; i < headers.Length; i++)
             {
-                string header = headers[i].Replace("\"","");
-                string field = fields[i].Replace("\"","");
+                string header = headers[i].Replace("\"", "");
+                string field = fields[i].Replace("\"", "");
                 entry[header] = field;
             }
             csvData.Add(entry);
@@ -84,15 +86,15 @@ public class StimulusPanelBhv : MonoBehaviour {
             string imagePath = Path.Combine("GAPED", Regex.Replace(entry["file_name"], Regex.Escape(".png"), "", RegexOptions.IgnoreCase));
             Texture2D image = Resources.Load<Texture2D>(imagePath);
             float duration = float.Parse(entry["duration"]) / 1e3f;
-            Stimulus stimulus = new Stimulus(image, duration);
+            Phase phase = int.Parse(entry["phase"]) == 3 ? Phase.Test : Phase.Train;
+            Stimulus stimulus = new Stimulus(image, duration, phase);
             _allStimuli.Add(stimulus);
         }
     }
 
     public void DrawNextStimulus()
     {
-        int idx = Random.Range(0, _allStimuli.Count);
-        _currentStimulus = _allStimuli[idx];
+        _currentStimulus = _allStimuli[_stimulusIndex];
         _renderer.material.SetTexture("_MainTex", _currentStimulus.Image);
         _renderer.material.SetTexture("_EmissionMap", _currentStimulus.Image);
         _transform.localScale = new Vector3(_currentStimulus.Image.width / (float)_currentStimulus.Image.height, 1, 1);
@@ -118,9 +120,9 @@ public class StimulusPanelBhv : MonoBehaviour {
         return _currentStimulus.Image.name;
     }
 
-    public bool Check4Quits ()
+    public bool Check4Quits()
     {
-        if (_allStimuli.Count == 0)
+        if (_stimulusIndex == _allStimuli.Count) //(_allStimuli.Count == 0)
         {
             StartCoroutine(this.ByeBye());
 

@@ -18,6 +18,8 @@ public class FeedbackBhv : MonoBehaviour {
     public float changeSpeed = 2.5f;
     public Texture positiveFeedbackTexture;
     public Texture negativeFeedbackTexture;
+    public Texture abortFeedbackTexture;
+    public Texture unknownFeedbackTexture;
 
     private Renderer _renderer;
     private Light _light;
@@ -41,23 +43,23 @@ public class FeedbackBhv : MonoBehaviour {
 
     public void Positive()
     {
-        _targetColor = Color.green;
         _targetIntensity = 1;
-        this.EmissionMap = positiveFeedbackTexture;
+        _targetColor = TaskManager.Instance.Phase == Phase.Test ? Color.white : Color.green;
+        this.EmissionMap = TaskManager.Instance.Phase == Phase.Test ? unknownFeedbackTexture : positiveFeedbackTexture;
     }
 
     public void Abort()
     {
-        _targetColor = Color.yellow;
         _targetIntensity = 1;
-        this.EmissionMap = null;
+        _targetColor = Color.yellow;
+        this.EmissionMap = abortFeedbackTexture;
     }
 
     public void Negative()
     {
-        _targetColor = Color.red;
         _targetIntensity = 1;
-        this.EmissionMap = negativeFeedbackTexture;
+        _targetColor = TaskManager.Instance.Phase == Phase.Test ? Color.white : Color.red;
+        this.EmissionMap = TaskManager.Instance.Phase == Phase.Test ? unknownFeedbackTexture : negativeFeedbackTexture;
     }
 
     public void Neutral()
