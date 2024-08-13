@@ -204,7 +204,7 @@ public class TaskManager : Singleton<TaskManager>
         this.ValidTrialCounter++;
 
         stimulusPanel.StimulusIndex++;
-        //stimulusPanel.RemovePreviousStimulus();
+
         _abortedPreviousTrial = false;
 
         float iti = interTrialInterval + timePenalty * choiceCorrect;

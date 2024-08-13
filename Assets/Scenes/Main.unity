@@ -2956,6 +2956,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 885ce8d8e08893a4c8c25306abdc7203, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  testImageSequence: {fileID: 4900000, guid: c4e0c978feb58594d8f634d8909b5e07, type: 3}
+  debugging: 0
   _stimulusIndex: 0
   _currentStimulus:
     _image: {fileID: 0}

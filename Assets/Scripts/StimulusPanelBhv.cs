@@ -19,6 +19,9 @@ public class StimulusPanelBhv : MonoBehaviour
         set { _renderer.material.SetColor("_EmissionColor", value); }
     }
 
+    public TextAsset testImageSequence;
+    public bool debugging = false;
+
     private Transform _transform;
     private Renderer _renderer;
     [SerializeField] private int _stimulusIndex = 0;
@@ -48,8 +51,10 @@ public class StimulusPanelBhv : MonoBehaviour
 
         // Select a random CSV file
         TextAsset csvFile = csvFiles[Random.Range(0, csvFiles.Length)];
-
-        csvFile = Resources.Load<TextAsset>(Path.Combine("Image Sequences", "image_sequence_TEST")); // !!!!!!!!!!! REMOVE !!!!!!!!!!!!!!
+        if (debugging)
+        {
+            csvFile = testImageSequence;
+        }
 
         // Read the CSV file contents
         StringReader reader = new StringReader(csvFile.text);

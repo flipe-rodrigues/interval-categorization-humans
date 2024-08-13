@@ -43,23 +43,23 @@ public class FeedbackBhv : MonoBehaviour {
 
     public void Positive()
     {
-        _targetIntensity = 1;
-        _targetColor = TaskManager.Instance.Phase == Phase.Test ? Color.white : Color.green;
         this.EmissionMap = TaskManager.Instance.Phase == Phase.Test ? unknownFeedbackTexture : positiveFeedbackTexture;
+        _targetColor = TaskManager.Instance.Phase == Phase.Test ? Color.white : Color.green;
+        _targetIntensity = 1;
     }
 
     public void Abort()
     {
-        _targetIntensity = 1;
-        _targetColor = Color.yellow;
         this.EmissionMap = abortFeedbackTexture;
+        _targetColor = Color.yellow;
+        _targetIntensity = 1;
     }
 
     public void Negative()
     {
-        _targetIntensity = 1;
-        _targetColor = TaskManager.Instance.Phase == Phase.Test ? Color.white : Color.red;
         this.EmissionMap = TaskManager.Instance.Phase == Phase.Test ? unknownFeedbackTexture : negativeFeedbackTexture;
+        _targetColor = TaskManager.Instance.Phase == Phase.Test ? Color.white : Color.red;
+        _targetIntensity = 1;
     }
 
     public void Neutral()
