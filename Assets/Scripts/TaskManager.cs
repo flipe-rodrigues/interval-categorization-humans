@@ -12,7 +12,6 @@ public class TaskManager : Singleton<TaskManager>
 
     // Public fields
     public float categoryBoundary = 1f;
-    public float timePenalty = 1f;
     public bool isInitiationRequired = true;
     public bool isFixationRequired = false;
     public ButtonBhv leftButton;
@@ -40,6 +39,7 @@ public class TaskManager : Singleton<TaskManager>
     private ButtonBhv _initiationButton;
     private ButtonBhv _shortButton;
     private ButtonBhv _longButton;
+    private float _feedbackDisplayDuration = .8f;
     private bool _ongoingTrial;
     private bool _abortedPreviousTrial;
 
@@ -61,27 +61,27 @@ public class TaskManager : Singleton<TaskManager>
             return;
         }
 
-        if (UIManager.subjectCode.Contains("I"))        // "I" for "Initiation"
+        if (UIManager.subjectCode.ToUpper().Contains("I"))        // "I" for "Initiation"
         {
             isInitiationRequired = true;
         }
-        else if (UIManager.subjectCode.Contains("P"))   // "P" for "Passive"
+        else if (UIManager.subjectCode.ToUpper().Contains("P"))   // "P" for "Passive"
         {
             isInitiationRequired = false;
         }
-        if (UIManager.subjectCode.Contains("M"))        // "M" for "Mouse"
+        if (UIManager.subjectCode.ToUpper().Contains("M"))        // "M" for "Mouse"
         {
             inputMode = InputMode.Mouse;
         }
-        else if (UIManager.subjectCode.Contains("K"))   // "K" for "Keyboard"
+        else if (UIManager.subjectCode.ToUpper().Contains("K"))   // "K" for "Keyboard"
         {
             inputMode = InputMode.Keyboard;
         }
-        if (UIManager.subjectCode.Contains("SL"))       // "SL" for "Short Long", as in "Short" on the left; "Long" on the right
+        if (UIManager.subjectCode.ToUpper().Contains("SL"))       // "SL" for "Short Long", as in "Short" on the left; "Long" on the right
         {
             contingency = Contingency.LeftIsShortRightIsLong;
         }
-        else if (UIManager.subjectCode.Contains("LS"))   // "LS" for "Long Short", as in "Short" on the right; "Long" on the left
+        else if (UIManager.subjectCode.ToUpper().Contains("LS"))   // "LS" for "Long Short", as in "Short" on the right; "Long" on the left
         {
             contingency = Contingency.RightIsShortLeftIsLong;
         }
@@ -137,6 +137,8 @@ public class TaskManager : Singleton<TaskManager>
 
         float duration = stimulusPanel.CurrentStimulus.Duration;
         float choiceTime = Time.timeSinceLevelLoad + duration;
+        float iti = stimulusPanel.CurrentStimulus.InterTrialInterval;
+
 
         while (Time.timeSinceLevelLoad < choiceTime)
         {
@@ -163,11 +165,11 @@ public class TaskManager : Singleton<TaskManager>
                 _fileHandler.WriteTrackingTrial();
                 _fileHandler.WriteKeyPressTrial();
 
-                yield return new WaitForSeconds(1.5f * 2 / 3);
+                yield return new WaitForSeconds(_feedbackDisplayDuration);
 
                 feedbackPanel.Neutral();
 
-                yield return new WaitForSeconds(1.5f * 1 / 3);
+                yield return new WaitForSeconds(iti - _feedbackDisplayDuration);
 
                 _ongoingTrial = stimulusPanel.Check4Quits();
 
@@ -254,13 +256,11 @@ public class TaskManager : Singleton<TaskManager>
 
         _abortedPreviousTrial = false;
 
-        float iti = stimulusPanel.CurrentStimulus.InterTrialInterval + timePenalty * (1 - choiceCorrect);
-
-        yield return new WaitForSeconds(1.5f * 2 / 3);
+        yield return new WaitForSeconds(_feedbackDisplayDuration);
 
         feedbackPanel.Neutral();
 
-        yield return new WaitForSeconds(1.5f * 1 / 3);
+        yield return new WaitForSeconds(iti - _feedbackDisplayDuration);
 
         _ongoingTrial = stimulusPanel.Check4Quits();
     }
