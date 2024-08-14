@@ -12,16 +12,22 @@ public class TaskManager : Singleton<TaskManager>
 
     // Public fields
     public float categoryBoundary = 1f;
-    public float interTrialInterval = 3f;
     public float timePenalty = 1f;
     public bool isInitiationRequired = true;
     public bool isFixationRequired = false;
-    public ButtonBhv initiationButton;
-    public ButtonBhv longButton;
-    public ButtonBhv shortButton;
+    public ButtonBhv leftButton;
+    public ButtonBhv centralButton;
+    public ButtonBhv rightButton;
     public StimulusPanelBhv stimulusPanel;
     public FeedbackBhv feedbackPanel;
     public TrajectoryTracker trajectoryTracker;
+    public KeyPressTracker keyPressTracker;
+    public enum Contingency
+    {
+        LeftIsShortRightIsLong,
+        RightIsShortLeftIsLong
+    }
+    public Contingency contingency;
     public enum InputMode
     {
         Mouse,
@@ -31,6 +37,9 @@ public class TaskManager : Singleton<TaskManager>
 
     // Private fieldss
     private WriteData2CSV _fileHandler;
+    private ButtonBhv _initiationButton;
+    private ButtonBhv _shortButton;
+    private ButtonBhv _longButton;
     private bool _ongoingTrial;
     private bool _abortedPreviousTrial;
 
@@ -38,10 +47,14 @@ public class TaskManager : Singleton<TaskManager>
     {
         _fileHandler = this.GetComponent<WriteData2CSV>();
 
-        this.HandleTaskVariantAssignment();
+        this.ParseTaskVariant();
+
+        this.HandleCursorVisibility();
+
+        this.AssignButtonRoles();
     }
 
-    private void HandleTaskVariantAssignment()
+    private void ParseTaskVariant()
     {
         if (UIManager.subjectCode == null)
         {
@@ -64,11 +77,36 @@ public class TaskManager : Singleton<TaskManager>
         {
             inputMode = InputMode.Keyboard;
         }
+        if (UIManager.subjectCode.Contains("SL"))       // "SL" for "Short Long", as in "Short" on the left; "Long" on the right
+        {
+            contingency = Contingency.LeftIsShortRightIsLong;
+        }
+        else if (UIManager.subjectCode.Contains("LS"))   // "LS" for "Long Short", as in "Short" on the right; "Long" on the left
+        {
+            contingency = Contingency.RightIsShortLeftIsLong;
+        }
+    }
+
+    private void HandleCursorVisibility()
+    {
+        Cursor.visible = inputMode == InputMode.Mouse;
+    }
+
+    private void AssignButtonRoles()
+    {
+        _initiationButton = centralButton;
+        _initiationButton.SetButtonRole(ButtonBhv.ButtonRole.Initiation);
+
+        _shortButton = contingency == Contingency.LeftIsShortRightIsLong ? leftButton : rightButton;
+        _shortButton.SetButtonRole(ButtonBhv.ButtonRole.Short);
+
+        _longButton = contingency == Contingency.RightIsShortLeftIsLong ? leftButton : rightButton;
+        _longButton.SetButtonRole(ButtonBhv.ButtonRole.Long);
     }
 
     private void Update()
     {
-        if (!_ongoingTrial && Time.timeSinceLevelLoad > interTrialInterval)
+        if (!_ongoingTrial && Time.timeSinceLevelLoad > 3.8f)
         {
             StartCoroutine(this.TaskCoroutine());
         }
@@ -81,30 +119,32 @@ public class TaskManager : Singleton<TaskManager>
         stimulusPanel.DrawNextStimulus();
 
         trajectoryTracker.SyncPulse(new float[] { -100, -100, -100, -100, -100, Time.timeSinceLevelLoad });
+        keyPressTracker.SyncPulse(-100);
 
         this.TrialCounter++;
 
-        initiationButton.LightsOn();
+        _initiationButton.LightsOn();
 
-        while (!initiationButton.IsPressed && (isInitiationRequired || this.TrialCounter == 1))
+        while (!_initiationButton.IsPressed && (isInitiationRequired || this.TrialCounter == 1))
         {
             yield return null;
         }
         trajectoryTracker.SyncPulse(new float[] { -200, -200, -200, -200, -200, Time.timeSinceLevelLoad });
+        keyPressTracker.SyncPulse(-200);
 
         stimulusPanel.LightsOn();
-        initiationButton.LightsOff();
+        _initiationButton.LightsOff();
 
         float duration = stimulusPanel.CurrentStimulus.Duration;
         float choiceTime = Time.timeSinceLevelLoad + duration;
 
         while (Time.timeSinceLevelLoad < choiceTime)
         {
-            if (longButton.IsPressed || shortButton.IsPressed || (!initiationButton.IsPressed && isFixationRequired))
+            if (_longButton.IsPressed || _shortButton.IsPressed || (!_initiationButton.IsPressed && isFixationRequired))
             {
-                initiationButton.LightsOff();
-                longButton.LightsOff();
-                shortButton.LightsOff();
+                _initiationButton.LightsOff();
+                _longButton.LightsOff();
+                _shortButton.LightsOff();
                 stimulusPanel.LightsOff();
 
                 feedbackPanel.Abort();
@@ -119,14 +159,15 @@ public class TaskManager : Singleton<TaskManager>
                     _abortedPreviousTrial = true;
                 }
 
-                _fileHandler.WriteBhvTrial(duration, -1, -1, -1, -1, stimulusPanel.GetImgName());
+                _fileHandler.WriteBhvTrial(duration, -1, -1, -1, -1, -1, -1, stimulusPanel.GetImgName());
                 _fileHandler.WriteTrackingTrial();
+                _fileHandler.WriteKeyPressTrial();
 
-                yield return new WaitForSeconds(interTrialInterval * 2 / 3);
+                yield return new WaitForSeconds(1.5f * 2 / 3);
 
                 feedbackPanel.Neutral();
 
-                yield return new WaitForSeconds(interTrialInterval * 1 / 3);
+                yield return new WaitForSeconds(1.5f * 1 / 3);
 
                 _ongoingTrial = stimulusPanel.Check4Quits();
 
@@ -137,28 +178,31 @@ public class TaskManager : Singleton<TaskManager>
 
         float reactionTime = Time.timeSinceLevelLoad;
 
-        longButton.LightsOn();
-        shortButton.LightsOn();
+        _longButton.LightsOn();
+        _shortButton.LightsOn();
         stimulusPanel.LightsOff();
 
-        while (initiationButton.IsTouched)
+        while (_initiationButton.IsTouched)
         {
             yield return null;
         }
         trajectoryTracker.SyncPulse(new float[] { -300, -300, -300, -300, -300, Time.timeSinceLevelLoad });
+        keyPressTracker.SyncPulse(-300);
 
         reactionTime = Time.timeSinceLevelLoad - reactionTime;
 
         float movementTime = Time.timeSinceLevelLoad;
 
-        while (!longButton.IsPressed && !shortButton.IsPressed)
+        while (!_longButton.IsPressed && !_shortButton.IsPressed)
         {
             yield return null;
         }
         trajectoryTracker.SyncPulse(new float[] { -400, -400, -400, -400, -400, Time.timeSinceLevelLoad });
+        keyPressTracker.SyncPulse(-400);
 
         movementTime = Time.timeSinceLevelLoad - movementTime;
 
+        int choiceLeft;
         int choiceLong;
         int choiceCorrect;
 
@@ -167,39 +211,42 @@ public class TaskManager : Singleton<TaskManager>
             int die = Random.Range(0, 2);
             if (die == 0)
             {
-                choiceLong = longButton.IsPressed ? 1 : 0;
+                choiceLong = _longButton.IsPressed ? 1 : 0;
                 choiceCorrect = 0;
                 feedbackPanel.Negative();
             }
             else
             {
-                choiceLong = longButton.IsPressed ? 1 : 0;
+                choiceLong = _longButton.IsPressed ? 1 : 0;
                 choiceCorrect = 1;
                 feedbackPanel.Positive();
             }
         }
 
-        else if (longButton.IsPressed && duration < categoryBoundary ||
-                 shortButton.IsPressed && duration > categoryBoundary)
+        else if (_longButton.IsPressed && duration < categoryBoundary ||
+                 _shortButton.IsPressed && duration > categoryBoundary)
         {
-            choiceLong = longButton.IsPressed ? 1 : 0;
+            choiceLong = _longButton.IsPressed ? 1 : 0;
             choiceCorrect = 0;
             feedbackPanel.Negative();
         }
 
         else
         {
-            choiceLong = longButton.IsPressed ? 1 : 0;
+            choiceLong = _longButton.IsPressed ? 1 : 0;
             choiceCorrect = 1;
             feedbackPanel.Positive();
         }
 
-        initiationButton.LightsOff();
-        longButton.LightsOff();
-        shortButton.LightsOff();
+        choiceLeft = contingency == Contingency.RightIsShortLeftIsLong ? choiceLong : 1 - choiceLong;
 
-        _fileHandler.WriteBhvTrial(duration, reactionTime, movementTime, choiceLong, choiceCorrect, stimulusPanel.GetImgName());
+        _initiationButton.LightsOff();
+        _longButton.LightsOff();
+        _shortButton.LightsOff();
+
+        _fileHandler.WriteBhvTrial(duration, reactionTime, movementTime, choiceLeft, choiceLong, choiceCorrect, stimulusPanel.CurrentStimulus.InterTrialInterval, stimulusPanel.GetImgName());
         _fileHandler.WriteTrackingTrial();
+        _fileHandler.WriteKeyPressTrial();
 
         this.ValidTrialCounter++;
 
@@ -207,13 +254,13 @@ public class TaskManager : Singleton<TaskManager>
 
         _abortedPreviousTrial = false;
 
-        float iti = interTrialInterval + timePenalty * choiceCorrect;
+        float iti = stimulusPanel.CurrentStimulus.InterTrialInterval + timePenalty * (1 - choiceCorrect);
 
-        yield return new WaitForSeconds(iti * 2 / 3);
+        yield return new WaitForSeconds(1.5f * 2 / 3);
 
         feedbackPanel.Neutral();
 
-        yield return new WaitForSeconds(iti * 1 / 3);
+        yield return new WaitForSeconds(1.5f * 1 / 3);
 
         _ongoingTrial = stimulusPanel.Check4Quits();
     }

@@ -13,8 +13,8 @@ public class ButtonBhv : MonoBehaviour
     }
     private Color FrameEmissionColor
     {
-        get { return _frameRenderer.material.GetColor("_EmissionColor"); }
-        set { _frameRenderer.material.SetColor("_EmissionColor", value); }
+        get { return frameRenderer.material.GetColor("_EmissionColor"); }
+        set { frameRenderer.material.SetColor("_EmissionColor", value); }
     }
     private Color LabelEmissionColor
     {
@@ -29,6 +29,13 @@ public class ButtonBhv : MonoBehaviour
         K = KeyCode.K
     }
     public Keys assignedKey = Keys.D;
+    public enum ButtonRole
+    {
+        Short,
+        Initiation,
+        Long
+    }
+    public ButtonRole buttonRole;
     [Range(0, 100)]
     public float relaxSpeed = 1;
     [Range(1, 5)]
@@ -37,12 +44,15 @@ public class ButtonBhv : MonoBehaviour
     public float maxLightIntensity = .25f;
     [ColorUsage(false, true)]
     public Color bulbColor = Color.white;
+    public Renderer frameRenderer;
+    public Renderer initiationLabelRenderer;
+    public Renderer shortLabelRenderer;
+    public Renderer longLabelRenderer;
 
     private Transform _transform;
     private Rigidbody _rigidbody;
     private Renderer _mainRenderer;
-    public Renderer _frameRenderer;
-    public Renderer _labelRenderer;
+    private Renderer _labelRenderer;
     private Light _light;
     private Color _targetMainColor;
     private Color _targetFrameColor;
@@ -62,6 +72,33 @@ public class ButtonBhv : MonoBehaviour
     void Start()
     {
         _initialPosition = _transform.position;
+    }
+
+    public void SetButtonRole(ButtonRole role)
+    {
+        buttonRole = role;
+
+        initiationLabelRenderer.gameObject.SetActive(buttonRole == ButtonRole.Initiation ? true : false);
+        shortLabelRenderer.gameObject.SetActive(buttonRole == ButtonRole.Short ? true : false);
+        longLabelRenderer.gameObject.SetActive(buttonRole == ButtonRole.Long ? true : false);
+
+        switch (buttonRole) 
+        {
+            case ButtonRole.Initiation:
+
+                _labelRenderer = initiationLabelRenderer;
+                break;
+
+            case ButtonRole.Short:
+
+                _labelRenderer = shortLabelRenderer;
+                break;
+
+            case ButtonRole.Long:
+
+                _labelRenderer = longLabelRenderer;
+                break;
+        }
     }
 
     void Update()

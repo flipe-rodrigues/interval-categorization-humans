@@ -26,7 +26,8 @@ public class PostBuildProcessor : IPostprocessBuildWithReport
         {
             Application.productName + "_Data/Data",
             Application.productName + "_Data/Data/Behavior",
-            Application.productName + "_Data/Data/Trajectories",
+            Application.productName + "_Data/Data/Mouse Trajectories",
+            Application.productName + "_Data/Data/Key Presses",
         };
 
         foreach (var folder in foldersToCreate)

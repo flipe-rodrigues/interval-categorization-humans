@@ -8,7 +8,6 @@ library(lubridate)
 current_dir <- "F:/Documents/GitHub/Unity/interval-categorization-humans/Assets/Scripts/R"
 file_name <- "TempDisc_PictureSequence_Input.csv"
 input_path <- file.path(current_dir, file_name)
-#full_results <- data.frame(read.csv(file.choose(), sep = ";", dec = ",", header = TRUE))  # TempDisc_PictureSequence_Input
 full_results <- data.frame(read.csv(input_path, sep = ";", dec = ",", header = TRUE))  # TempDisc_PictureSequence_Input
 picture_info <- full_results[, c(1:2)]
 colnames(picture_info) <- c("PictureType", "file_name")
@@ -27,10 +26,17 @@ occurrences <- list(
   PosLow = 20, PosHigh = 20, NeutralTest = 20
 )
 
-# Define the presentation durations
+# Define the stimulus durations
 durations <- list(
   anchor = c(200, 2200),
   intermediate = c(603, 1797, 931, 1469)
+)
+
+# Define the ITI durations
+iti_mu <- 4000
+itis <- list(
+  anchor = c(iti_mu-200, iti_mu-2200),
+  intermediate = c(iti_mu-603, iti_mu-1797, iti_mu-931, iti_mu-1469)
 )
 
 # Function to generate training sequence
@@ -43,6 +49,8 @@ generate_training_sequence <- function(picture_info) {
   # Phase 1: Short (200 ms) and Long (2200 ms) anchors, randomized sequence with constraints
   phase1_durations <- c(rep(200, 5), rep(2200, 5))
   phase1_durations <- sample(phase1_durations)  # Randomize durations
+  phase1_itis <- c(rep(1800, 5), rep(3800, 5))
+  phase1_itis <- sample(phase1_itis)
   
   # Check and adjust duration sequence
   while (any(diff(phase1_durations) == 0)) {
@@ -52,12 +60,15 @@ generate_training_sequence <- function(picture_info) {
   phase1 <- data.frame(
     file_name = rep(training_neutral_pictures[1:2], each = 5),
     duration = phase1_durations,
+    iti = phase1_itis,
     phase = 1
   )
   
   # Phase 2: Intermediate times, randomized durations and pictures
   phase2_durations <- c(200, 603, 931, 1469, 1797, 2200)
   phase2_durations <- sample(rep(phase2_durations, times = c(3, 6, 8, 8, 6, 3)))  # Randomize durations
+  phase2_itis <- c(iti_mu-200, iti_mu-603, iti_mu-931, iti_mu-1469, iti_mu-1797, iti_mu-2200)
+  phase2_itis <- sample(rep(phase2_itis, times = c(3, 6, 8, 8, 6, 3)))  
   
   # Check and adjust duration sequence
   while (any(diff(phase2_durations) == 0)) {
@@ -70,14 +81,13 @@ generate_training_sequence <- function(picture_info) {
   phase2 <- data.frame(
     file_name = phase2_pictures,
     duration = phase2_durations,
+    iti = phase2_itis,
     phase = 2
   )
   
   # Return phase 1 and phase 2 separately
   return(list(phase1 = phase1, phase2 = phase2))
 }
-
-
 
 # Function to generate test sequence
 generate_test_sequence <- function(picture_info, picture_counts, occurrences, durations) {
@@ -94,6 +104,11 @@ generate_test_sequence <- function(picture_info, picture_counts, occurrences, du
         rep(c(603, 1797), each = 6),
         rep(c(931, 1469), each = 8)
       )
+      itis_rep <- c(
+        rep(c(iti_mu-200, iti_mu-2200), each = 3),
+        rep(c(iti_mu-603, iti_mu-1797), each = 6),
+        rep(c(iti_mu-931, iti_mu-1469), each = 8)
+      )
       n_rep <- 34
     } else {
       # For other pictures
@@ -102,17 +117,24 @@ generate_test_sequence <- function(picture_info, picture_counts, occurrences, du
         rep(c(603, 1797), each = 3),
         rep(c(931, 1469), each = 4)
       )
+      itis_rep <- c(
+        rep(c(iti_mu-200, iti_mu-2200), each = 3),
+        rep(c(iti_mu-603, iti_mu-1797), each = 3),
+        rep(c(iti_mu-931, iti_mu-1469), each = 4)
+      )
       n_rep <- 20
     }
     
     pictures_rep <- sample(rep(picture_set, length.out = length(durations_rep)))
     durations_rep <- rep(durations_rep, length.out = length(pictures_rep))
+    itis_rep <- sample(rep(itis_rep, length.out = length(pictures_rep)))
     
     sequence <- data.frame(
       file_name = pictures_rep,
       duration = durations_rep,
+      iti = itis_rep,
       phase = 3
-      )
+    )
     test_sequence <- rbind(test_sequence, sequence)
   }
   
@@ -134,7 +156,6 @@ shuffle_with_constraints <- function(data) {
   return(data)
 }
 
-
 # Function to combine training and test sequences
 combine_sequences <- function(phase1, phase2, test_sequence) {
   # Shuffle each phase separately
@@ -153,14 +174,14 @@ num_sequences <- 1000
 pb <- txtProgressBar(min = 0, max = num_sequences, style = 3)
 
 for (i in 1:num_sequences) {
-
+  
   # Generate sequences
   training_sequences <- generate_training_sequence(picture_info)
   phase1 <- training_sequences$phase1
   phase2 <- training_sequences$phase2
   test_sequence <- generate_test_sequence(picture_info, picture_counts, occurrences, durations)
   final_sequence <- combine_sequences(phase1, phase2, test_sequence)
-
+  
   # Save
   timestamp <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
   file_name <- paste0("image_sequence_", timestamp, ".csv")

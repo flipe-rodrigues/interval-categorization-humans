@@ -91,8 +91,9 @@ public class StimulusPanelBhv : MonoBehaviour
             string imagePath = Path.Combine("GAPED", Regex.Replace(entry["file_name"], Regex.Escape(".png"), "", RegexOptions.IgnoreCase));
             Texture2D image = Resources.Load<Texture2D>(imagePath);
             float duration = float.Parse(entry["duration"]) / 1e3f;
+            float interTrialInterval = float.Parse(entry["iti"]) / 1e3f;
             Phase phase = int.Parse(entry["phase"]) == 3 ? Phase.Test : Phase.Train;
-            Stimulus stimulus = new Stimulus(image, duration, phase);
+            Stimulus stimulus = new Stimulus(image, duration, interTrialInterval, phase);
             _allStimuli.Add(stimulus);
         }
     }
