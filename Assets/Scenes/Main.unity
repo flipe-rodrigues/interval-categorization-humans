@@ -2923,7 +2923,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de371a722250c214b831971e0aaebadb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  changeSpeed: 40
+  changeSpeed: 30
   positiveFeedbackTexture: {fileID: 2800000, guid: 111189f442327b344a4e60cdedcaf488,
     type: 3}
   negativeFeedbackTexture: {fileID: 2800000, guid: 2e51efbe8a7a7184ba53fe9d82584cec,
