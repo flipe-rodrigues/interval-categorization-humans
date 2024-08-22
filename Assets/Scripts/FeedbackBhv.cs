@@ -14,8 +14,8 @@ public class FeedbackBhv : MonoBehaviour {
         set { _renderer.material.SetTexture("_EmissionMap", value); }
     }
 
-    [Range(1, 5)]
-    public float changeSpeed = 2.5f;
+    [Range(1, 100)]
+    public float changeSpeed = 25f;
     public Texture positiveFeedbackTexture;
     public Texture negativeFeedbackTexture;
     public Texture abortFeedbackTexture;

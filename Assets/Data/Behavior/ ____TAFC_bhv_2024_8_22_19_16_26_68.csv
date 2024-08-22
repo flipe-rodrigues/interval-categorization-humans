@@ -1,0 +1,5 @@
+stimulus, reactionTime, movementTime, choiceLeft,  choiceLong, choiceCorrect, interTrialInterval, image
+2.2,-1,-1,-1,-1,-1,-1,TlN107
+2.2,-1,-1,-1,-1,-1,-1,TlN107
+0.2,0.3428574,0.395647,1,1,0,3.8,TlN102
+0.2,0.03975105,1.649044,0,0,1,3.8,TlN107
