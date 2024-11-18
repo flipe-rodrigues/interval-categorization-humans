@@ -47,7 +47,8 @@ for ff = 1 : n_files
     substrs = strsplit(bhv_filename,'_');
     subject_name = substrs{1};
     subject_age = substrs{2};
-    subject_handedness = substrs{3};
+    subject_sex = substrs{3};
+    subject_handedness = substrs{4};
     session_date = strjoin(substrs(7:end-1),'_');
     
     %% parse behavioral data

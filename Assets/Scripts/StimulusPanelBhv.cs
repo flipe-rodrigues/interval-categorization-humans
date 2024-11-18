@@ -5,9 +5,6 @@ using System.Text.RegularExpressions;
 using System.Linq;
 using UnityEngine.SceneManagement;
 using System.IO;
-using Leap.Unity;
-using static LeapInternal.Connection;
-using LeapInternal;
 
 public class StimulusPanelBhv : MonoBehaviour
 {

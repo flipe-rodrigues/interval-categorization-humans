@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.IO;
 using System;
@@ -16,6 +17,11 @@ public class WriteData2CSV : MonoBehaviour
     private StreamWriter _swBhv;
     private StreamWriter _swMouseTrajectory;
     private StreamWriter _swKeyPress;
+
+    private void Awake()
+    {
+        this.HomogeneizeAcrossCulturalSettings();
+    }
 
     void Start()
     {
@@ -42,6 +48,15 @@ public class WriteData2CSV : MonoBehaviour
         _swKeyPress = System.IO.File.CreateText(Application.dataPath + "//Data" + "//Key Presses//" + keyPress_file + ".csv");
 
         this.WriteHeaders();
+    }
+
+    private void HomogeneizeAcrossCulturalSettings()
+    {
+        CultureInfo customCulture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
+        customCulture.NumberFormat.NumberDecimalSeparator = "."; 
+        customCulture.NumberFormat.NumberGroupSeparator = ",";
+        CultureInfo.DefaultThreadCurrentCulture = customCulture; 
+        CultureInfo.DefaultThreadCurrentUICulture = customCulture;
     }
 
     private void CreateIfInexistent(string folderPath)
