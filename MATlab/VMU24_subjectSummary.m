@@ -4,7 +4,7 @@ clear;
 clc;
 
 %% path settings
-institute = 'vmu';
+institute = 'ccu';
 root_path = fullfile(dropboxdir,...
     'data','fr','humans','vmu24',institute);
 bhv_path = fullfile(root_path,'behavior');
@@ -95,6 +95,7 @@ for ff = 1 : n_files
         mouse_initiation_idcs = mouse_initiation_idcs(valid_flags);
         mouse_choice_idcs = ...
             find(mouse_choice_flags);
+        % mouse_choice_idcs = mouse_choice_idcs(valid_flags);
     end
     
     %% color settings

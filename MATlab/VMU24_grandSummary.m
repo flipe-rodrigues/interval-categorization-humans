@@ -4,8 +4,9 @@ clear;
 clc;
 
 %% selection settings
-institute = 'ccu';
+institute = 'vmu';
 selected_types = {'dogs','wolves'};
+selected_types = {'negative','neutral','positive'};
 
 %% path settings
 root_path = fullfile(dropboxdir,...
@@ -64,10 +65,9 @@ for ii = 1 : n_images
     end
 end
 
-%%
-selected_flags = ismember(image_types,selected_types);
+% parse image types;
 image_types = categorical(image_types);
-type_set = unique(image_types);
+type_set = unique(image_types(ismember(image_types,selected_types)));
 n_types = numel(type_set);
 
 %% cluster image scores
@@ -91,7 +91,7 @@ type_clrs = summer(n_types);
 
 % figure settings
 figure(...
-    'name','VMU24_group',...
+    'name',sprintf('VMU24_group_%s',institute),...
     'numbertitle','off',...
     'inverthardcopy','off',...
     'windowstyle','docked',...
@@ -99,7 +99,7 @@ figure(...
 
 % axes settings
 n_rows = 2;
-n_cols = 4;
+n_cols = 3;
 n_sps = n_rows * n_cols;
 sps = gobjects(n_sps,1);
 for ii = 1 : n_sps
@@ -132,11 +132,11 @@ for ii = 1 : n_rows
     xlabel(sps(1+(ii-1)*n_cols),'Valence (a.u.)');
     xlabel(sps(2+(ii-1)*n_cols),'Interval time (s)');
     xlabel(sps(3+(ii-1)*n_cols),'Interval time (s)');
-    xlabel(sps(4+(ii-1)*n_cols),'Interval time (s)');
+    % xlabel(sps(4+(ii-1)*n_cols),'Interval time (s)');
     ylabel(sps(1+(ii-1)*n_cols),'Arousal (a.u.)');
     ylabel(sps(2+(ii-1)*n_cols),'Proportion of long choices');
     ylabel(sps(3+(ii-1)*n_cols),'Choice time (s)');
-    ylabel(sps(4+(ii-1)*n_cols),'Movement time (s)');
+    % ylabel(sps(4+(ii-1)*n_cols),'Movement time (s)');
 end
 
 %% utility function handles
@@ -159,19 +159,19 @@ subject_types = cell(n_subjects,1);
 
 % iterate through subjects
 for ss = 1 : n_subjects
-    
+
     %% load behavioral data
     bhv_file = bhv_files{ss};
     [~,bhv_filename] = fileparts(bhv_file);
     bhv = readtable(bhv_file);
-    
+
     % parse meta data
     substrs = strsplit(bhv_filename,'_');
     subject_name = substrs{1};
     subject_age = substrs{2};
     subject_handedness = substrs{3};
-    session_date =  strjoin(substrs(6:end-1),'_');
-    
+    session_date =  strjoin(substrs(7:end-1),'_');
+
     %% parse behavioral data
     n_trials = size(bhv,1);
     drawn_stimuli = bhv.stimulus;
@@ -183,8 +183,38 @@ for ss = 1 : n_subjects
     drawn_images = bhv.image;
     valid_flags = ...
         ~isnan(choice_long) & ...
-        ismember(choice_long,[0,1]);
-    
+        ismember(choice_long,[0,1]) & ...
+        choice_time < quantile(choice_time,.99);
+    n_valid_trials = sum(valid_flags);
+
+    %% load & parse mouse tracking data
+    % mouse_dir = dir([mouse_path,filesep,...
+    %     subject_name,'*mouse*',session_date,'*.csv']);
+    % if ~isempty(mouse_dir)
+    %     mouse_file = fullfile(mouse_dir.folder,mouse_dir.name);
+    %     mouse = readtable(mouse_file);
+    %     n_mousesamples = size(mouse,1);
+    %     mouse_samples = 1 : n_mousesamples;
+    %     mouse_initiation_flags = ...
+    %         mouse.position_x == -200 & ...
+    %         mouse.position_y == -200;
+    %     mouse_choice_flags = ...
+    %         mouse.position_x == -400 & ...
+    %         mouse.position_y == -400;
+    %     mouse_initiation_idcs = find(mouse_initiation_flags);
+    %     mouse_choice_idcs = find(mouse_choice_flags);
+    % 
+    %     % iterate through trials
+    %     for tt = 1 : n_valid_trials
+    %         mouse_flags = ...
+    %             mouse_samples >= mouse_initiation_idcs(tt) & ...
+    %             mouse_samples <= mouse_choice_idcs(tt) & ...
+    %             mouse.position_x' >= -99;
+    %         subject_mouseposx{tt} = mouse.position_x(mouse_flags);
+    %         subject_mouseposy{tt} = mouse.position_y(mouse_flags);
+    %     end
+    % end
+
     %% store current subject data
     subject_stimuli{ss} = drawn_stimuli(valid_flags);
     subject_choices{ss} = choice_long(valid_flags);
@@ -208,6 +238,9 @@ pool_arousal = vertcat(subject_arousal{:});
 pool_clusters = vertcat(subject_clusters{:});
 pool_types = vertcat(subject_types{:});
 
+%% enforce selection
+selected_flags = ismember(pool_types,selected_types);
+
 %% stimulus settings
 stimulus_set = unique(pool_stimuli);
 boundary = mean(stimulus_set);
@@ -222,28 +255,33 @@ n_outcomes = numel(outcome_set);
 
 % iterate through image clusters
 for kk = 1 : n_clusters
-    cluster_flags = pool_clusters == kk;
-    
+    cluster_flags = ...
+        selected_flags & ...
+        pool_clusters == kk;
+    if sum(cluster_flags) == 0
+        continue;
+    end
+
     % preallocation
     psy = struct();
     rt = struct();
     mt = struct();
     ct = struct();
-    
+
     % iterate through stimuli
     for ii = 1 : n_stimuli
         stimulus_flags = pool_stimuli == stimulus_set(ii);
         trial_flags = ...
             cluster_flags & ...
             stimulus_flags;
-        
+
         % choice data
         psy.x(ii,1) = stimulus_set(ii);
         psy.y(ii,1) = sum(pool_choices(trial_flags));
         psy.n(ii,1) = sum(trial_flags);
         psy.err(ii,1) = ...
             std(pool_choices(trial_flags)) / sqrt(sum(trial_flags));
-        
+
         % iterate through outcomes
         for jj = 1 : n_outcomes
             outcome_flags = pool_outcomes == outcome_set(jj);
@@ -251,19 +289,19 @@ for kk = 1 : n_clusters
                 cluster_flags & ...
                 stimulus_flags & ...
                 outcome_flags;
-            
+
             % reaction time data
             rt.med(ii,jj,1) = median(pool_reactiontimes(trial_flags));
             rt.iqr(ii,jj,:) = ...
                 quantile(pool_reactiontimes(trial_flags),[.25,.75]) - ...
                 median(pool_reactiontimes(trial_flags));
-            
+
             % movement time data
             mt.med(ii,jj,1) = median(pool_movementtimes(trial_flags));
             mt.iqr(ii,jj,:) = ...
                 quantile(pool_movementtimes(trial_flags),[.25,.75]) - ...
                 median(pool_movementtimes(trial_flags));
-            
+
             % choice time data
             ct.med(ii,jj,1) = median(pool_choicetimes(trial_flags));
             ct.iqr(ii,jj,:) = ...
@@ -271,7 +309,7 @@ for kk = 1 : n_clusters
                 median(pool_choicetimes(trial_flags));
         end
     end
-    
+
     %% plot joint distribution of valence & arousal scores
     grapeplot(pool_valence(cluster_flags),pool_arousal(cluster_flags),...
         'markeredgecolor',bg_clr,...
@@ -279,7 +317,7 @@ for kk = 1 : n_clusters
         'markersize',5,...
         'linewidth',1.5,...
         'parent',sps(1));
-    
+
     %% plot psychometric performance
     errorbar(sps(2),stimulus_set,psy.y./psy.n,psy.err,...
         'color',cluster_clrs(kk,:),...
@@ -295,7 +333,7 @@ for kk = 1 : n_clusters
         'markerfacecolor',cluster_clrs(kk,:),...
         'markersize',7.5,...
         'linewidth',1.5);
-    
+
     % plot reference lines
     plot(sps(2),...
         xlim(sps(2)),[1,1]*.5,':',...
@@ -305,9 +343,9 @@ for kk = 1 : n_clusters
         [1,1]*mean(xlim(sps(2))),ylim(sps(2)),':',...
         'color',fg_clr,...
         'handlevisibility','off');
-    
+
     %% plot average choice times
-    
+
     % iterate through outcomes
     for ii = 1 : n_outcomes
         errorbar(sps(3),stimulus_set,ct.med(:,ii,:),...
@@ -328,29 +366,6 @@ for kk = 1 : n_clusters
             'linewidth',1.5,...
             'linestyle',repmat('-',1,1+~outcome_set(ii)));
     end
-    
-    %% plot average movement times
-    
-    % iterate through outcomes
-    %     for ii = 1 : n_outcomes
-    %         errorbar(sps(4),stimulus_set,mt.med(:,ii,:),...
-    %             mt.iqr(:,ii,1),...
-    %             mt.iqr(:,ii,2),...
-    %             'color',cluster_clrs(kk,:),...
-    %             'marker','none',...
-    %             'linewidth',.5,...
-    %             'linestyle','none',...
-    %             'capsize',0,...
-    %             'handlevisibility','off');
-    %         plot(sps(4),stimulus_set,mt.med(:,ii,:),...
-    %             'color',cluster_clrs(kk,:),...
-    %             'marker','o',...
-    %             'markeredgecolor',bg_clr,...
-    %             'markerfacecolor',cluster_clrs(kk,:),...
-    %             'markersize',7.5,...
-    %             'linewidth',1.5,...
-    %             'linestyle',repmat('-',1,1+~outcome_set(ii)));
-    %     end
 end
 
 %% TYPES
@@ -362,29 +377,32 @@ title(sps(1),sprintf('N = %i subjects (%i trials total)',...
 
 % iterate through image types
 for kk = 1 : n_types
-    
-    %%
-    type_flags = pool_types == type_set(kk);
-    
+    type_flags = ...
+        selected_flags & ...
+        pool_types == type_set(kk);
+    if sum(type_flags) == 0
+        continue;
+    end
+
     % preallocation
     psy = struct();
     rt = struct();
     mt = struct();
-    
+
     % iterate through stimuli
     for ii = 1 : n_stimuli
         stimulus_flags = pool_stimuli == stimulus_set(ii);
         trial_flags = ...
             type_flags & ...
             stimulus_flags;
-        
+
         % choice data
         psy.x(ii,1) = stimulus_set(ii)/3;
         psy.y(ii,1) = sum(pool_choices(trial_flags));
         psy.n(ii,1) = sum(trial_flags);
         psy.err(ii,1) = ...
             std(pool_choices(trial_flags)) / sqrt(sum(trial_flags));
-        
+
         % iterate through outcomes
         for jj = 1 : n_outcomes
             outcome_flags = pool_outcomes == outcome_set(jj);
@@ -392,19 +410,19 @@ for kk = 1 : n_types
                 type_flags & ...
                 stimulus_flags & ...
                 outcome_flags;
-            
+
             % reaction time data
             rt.med(ii,jj,1) = median(pool_reactiontimes(trial_flags));
             rt.iqr(ii,jj,:) = ...
                 quantile(pool_reactiontimes(trial_flags),[.25,.75]) - ...
                 median(pool_reactiontimes(trial_flags));
-            
+
             % movement time data
             mt.med(ii,jj,1) = median(pool_movementtimes(trial_flags));
             mt.iqr(ii,jj,:) = ...
                 quantile(pool_movementtimes(trial_flags),[.25,.75]) - ...
                 median(pool_movementtimes(trial_flags));
-            
+
             % choice time data
             ct.med(ii,jj,1) = median(pool_choicetimes(trial_flags));
             ct.iqr(ii,jj,:) = ...
@@ -412,7 +430,7 @@ for kk = 1 : n_types
                 median(pool_choicetimes(trial_flags));
         end
     end
-    
+
     %% plot joint distribution of valence & arousal scores
     grapeplot(pool_valence(type_flags),pool_arousal(type_flags),...
         'markeredgecolor',bg_clr,...
@@ -420,7 +438,7 @@ for kk = 1 : n_types
         'markersize',5,...
         'linewidth',1.5,...
         'parent',sps(1+n_cols));
-    
+
     %% plot psychometric performance
     errorbar(sps(2+n_cols),stimulus_set,psy.y./psy.n,psy.err,...
         'color',type_clrs(kk,:),...
@@ -436,7 +454,7 @@ for kk = 1 : n_types
         'markerfacecolor',type_clrs(kk,:),...
         'markersize',7.5,...
         'linewidth',1.5);
-    
+
     % plot reference lines
     plot(sps(2+n_cols),...
         xlim(sps(2+n_cols)),[1,1]*.5,':',...
@@ -446,9 +464,9 @@ for kk = 1 : n_types
         [1,1]*mean(xlim(sps(2+n_cols))),ylim(sps(2+n_cols)),':',...
         'color',fg_clr,...
         'handlevisibility','off');
-    
+
     %% plot average choice times
-    
+
     % iterate through outcomes
     for ii = 1 : n_outcomes
         errorbar(sps(3+n_cols),stimulus_set,ct.med(:,ii,:),...
@@ -469,33 +487,10 @@ for kk = 1 : n_types
             'linewidth',1.5,...
             'linestyle',repmat('-',1,1+~outcome_set(ii)));
     end
-    
-    %% plot average movement times
-    
-    % iterate through outcomes
-    %     for ii = 1 : n_outcomes
-    %         errorbar(sps(4+n_cols),stimulus_set,mt.med(:,ii,:),...
-    %             mt.iqr(:,ii,1),...
-    %             mt.iqr(:,ii,2),...
-    %             'color',type_clrs(kk,:),...
-    %             'marker','none',...
-    %             'linewidth',.5,...
-    %             'linestyle','none',...
-    %             'capsize',0,...
-    %             'handlevisibility','off');
-    %         plot(sps(4+n_cols),stimulus_set,mt.med(:,ii,:),...
-    %             'color',type_clrs(kk,:),...
-    %             'marker','o',...
-    %             'markeredgecolor',bg_clr,...
-    %             'markerfacecolor',type_clrs(kk,:),...
-    %             'markersize',7.5,...
-    %             'linewidth',1.5,...
-    %             'linestyle',repmat('-',1,1+~outcome_set(ii)));
-    %     end
 end
 
 %% legends
-legend(sps(2+n_cols),type_set,...
+legend(sps(2+n_cols),selected_types,...
     'color','none',...
     'textcolor',fg_clr,...
     'edgecolor',fg_clr,...
