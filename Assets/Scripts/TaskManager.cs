@@ -139,7 +139,6 @@ public class TaskManager : Singleton<TaskManager>
         float choiceTime = Time.timeSinceLevelLoad + duration;
         float iti = stimulusPanel.CurrentStimulus.InterTrialInterval;
 
-
         while (Time.timeSinceLevelLoad < choiceTime)
         {
             if (_longButton.IsPressed || _shortButton.IsPressed || (!_initiationButton.IsPressed && isFixationRequired))
