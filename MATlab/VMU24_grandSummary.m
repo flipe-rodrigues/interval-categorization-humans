@@ -4,9 +4,10 @@ clear;
 clc;
 
 %% selection settings
-institute = 'vmu';
+institute = 'ccu';
 selected_types = {'dogs','wolves'};
-selected_types = {'negative','neutral','positive'};
+% selected_types = {'negative','neutral','positive'};
+selected_types = {'dogs','horses','negative','neutral','positive','zebras','wolves'};
 
 %% path settings
 root_path = fullfile(dropboxdir,...
