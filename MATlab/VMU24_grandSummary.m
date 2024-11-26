@@ -6,8 +6,10 @@ clc;
 %% selection settings
 institute = 'ccu';
 selected_types = {'dogs','wolves'};
-% selected_types = {'negative','neutral','positive'};
-selected_types = {'dogs','horses','negative','neutral','positive','zebras','wolves'};
+% selected_types = {'horses','zebras'};
+selected_types = {'negative','neutral','positive'};
+% selected_types = {'dogs','horses','negative','neutral','positive','zebras','wolves'};
+trial_cutoff = inf;
 
 %% path settings
 root_path = fullfile(dropboxdir,...
@@ -175,6 +177,7 @@ for ss = 1 : n_subjects
 
     %% parse behavioral data
     n_trials = size(bhv,1);
+    trial_idcs = (1 : n_trials)';
     drawn_stimuli = bhv.stimulus;
     reaction_time = bhv.reactionTime;
     movement_time = bhv.movementTime;
@@ -183,6 +186,7 @@ for ss = 1 : n_subjects
     choice_correct = bhv.choiceCorrect;
     drawn_images = bhv.image;
     valid_flags = ...
+        trial_idcs > 20 & trial_idcs < trial_cutoff & ...
         ~isnan(choice_long) & ...
         ismember(choice_long,[0,1]) & ...
         choice_time < quantile(choice_time,.99);

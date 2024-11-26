@@ -399,4 +399,7 @@ for ff = 1 : n_files
                 'linewidth',.25);%+.75*(tt==n_valid_trials));
         end
     end
+    
+    %% log performance
+    fprintf('%s: %.1f%%\n',subject_name, nanmean(choice_correct) * 100);
 end
