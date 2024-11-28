@@ -5,8 +5,11 @@ clc;
 
 %% selection settings
 institute = 'ccu';
-selected_types = {'dogs','wolves','horses','zebras'};
+selected_types = {'dogs','wolves'};
+% selected_types = {'horses','zebras'};
 selected_types = {'negative','neutral','positive'};
+% selected_types = {'dogs','horses','negative','neutral','positive','zebras','wolves'};
+trial_cutoff = inf;
 
 %% path settings
 root_path = fullfile(dropboxdir,...
@@ -65,14 +68,13 @@ for ii = 1 : n_images
     end
 end
 
-% parse image types
-selected_flags = ismember(image_types,selected_types);
-image_types = categorical(image_types(selected_flags));
+% parse image types;
+image_types = categorical(image_types);
 type_set = unique(image_types(ismember(image_types,selected_types)));
 n_types = numel(type_set);
 
 %% cluster image scores
-n_clusters = 3;
+n_clusters = 4;
 image_clusters = kmeans([image_valence,image_arousal],n_clusters);
 mus = nan(n_clusters,2);
 for kk = 1 : n_clusters
@@ -86,13 +88,13 @@ end
 bg_clr = [1,1,1] * .05;
 fg_clr = 1 - bg_clr;
 cluster_clrs = colorlerp([[.0,.4,.95];fg_clr;[.95,.25,.35]],n_clusters);
-type_clrs = summer(n_selectedtypes);
+type_clrs = summer(n_types);
 
 %% figure & axes initialization
 
 % figure settings
 figure(...
-    'name','VMU24_group',...
+    'name',sprintf('VMU24_group_%s',institute),...
     'numbertitle','off',...
     'inverthardcopy','off',...
     'windowstyle','docked',...
@@ -100,7 +102,7 @@ figure(...
 
 % axes settings
 n_rows = 2;
-n_cols = 4;
+n_cols = 3;
 n_sps = n_rows * n_cols;
 sps = gobjects(n_sps,1);
 for ii = 1 : n_sps
@@ -133,11 +135,11 @@ for ii = 1 : n_rows
     xlabel(sps(1+(ii-1)*n_cols),'Valence (a.u.)');
     xlabel(sps(2+(ii-1)*n_cols),'Interval time (s)');
     xlabel(sps(3+(ii-1)*n_cols),'Interval time (s)');
-    xlabel(sps(4+(ii-1)*n_cols),'Interval time (s)');
+    % xlabel(sps(4+(ii-1)*n_cols),'Interval time (s)');
     ylabel(sps(1+(ii-1)*n_cols),'Arousal (a.u.)');
     ylabel(sps(2+(ii-1)*n_cols),'Proportion of long choices');
     ylabel(sps(3+(ii-1)*n_cols),'Choice time (s)');
-    ylabel(sps(4+(ii-1)*n_cols),'Movement time (s)');
+    % ylabel(sps(4+(ii-1)*n_cols),'Movement time (s)');
 end
 
 %% utility function handles
@@ -149,7 +151,8 @@ getimagestat = @(I,S) ...
 
 % preallocation
 subject_stimuli = cell(n_subjects,1);
-subject_choices = cell(n_subjects,1);
+subject_choicelong = cell(n_subjects,1);
+subject_choicelong = cell(n_subjects,1);
 subject_reactiontimes = cell(n_subjects,1);
 subject_movementtimes = cell(n_subjects,1);
 subject_choicetimes = cell(n_subjects,1);
@@ -171,24 +174,29 @@ for ss = 1 : n_subjects
     subject_name = substrs{1};
     subject_age = substrs{2};
     subject_handedness = substrs{3};
-    session_date =  strjoin(substrs(6:end-1),'_');
+    session_date =  strjoin(substrs(7:end-1),'_');
 
     %% parse behavioral data
     n_trials = size(bhv,1);
+    trial_idcs = (1 : n_trials)';
     drawn_stimuli = bhv.stimulus;
     reaction_time = bhv.reactionTime;
     movement_time = bhv.movementTime;
     choice_time = reaction_time + movement_time;
+    choice_left = bhv.choiceLeft;
     choice_long = bhv.choiceLong;
     choice_correct = bhv.choiceCorrect;
     drawn_images = bhv.image;
     valid_flags = ...
+        trial_idcs > 20 & trial_idcs < trial_cutoff & ...
         ~isnan(choice_long) & ...
-        ismember(choice_long,[0,1]);
+        ismember(choice_long,[0,1]) & ...
+        choice_time < quantile(choice_time,.99);
+    n_valid_trials = sum(valid_flags);
 
     %% store current subject data
     subject_stimuli{ss} = drawn_stimuli(valid_flags);
-    subject_choices{ss} = choice_long(valid_flags);
+    subject_choicelong{ss} = choice_long(valid_flags);
     subject_reactiontimes{ss} = reaction_time(valid_flags);
     subject_movementtimes{ss} = movement_time(valid_flags);
     subject_choicetimes{ss} = choice_time(valid_flags);
@@ -200,7 +208,8 @@ end
 
 %% pool across subjects
 pool_stimuli = vertcat(subject_stimuli{:});
-pool_choices = vertcat(subject_choices{:});
+pool_subject = repmat(subject_name,numel(pool_stimuli),1);
+pool_choices = vertcat(subject_choicelong{:});
 pool_reactiontimes = vertcat(subject_reactiontimes{:});
 pool_movementtimes = vertcat(subject_movementtimes{:});
 pool_choicetimes = vertcat(subject_choicetimes{:});
@@ -208,6 +217,28 @@ pool_valence = vertcat(subject_valence{:});
 pool_arousal = vertcat(subject_arousal{:});
 pool_clusters = vertcat(subject_clusters{:});
 pool_types = vertcat(subject_types{:});
+
+%% convert to table
+choice_table = table(...
+    pool_choices,...
+    pool_choices,...
+    pool_choices,...
+    pool_choices,...
+    'variablenames',{'left','long','correct','time'});
+varnames = {...
+    'subject',...
+    'stimulus',...
+    'choice',...
+    'choice_time'};
+bhv_table = table(...
+    pool_subject,...
+    pool_stimuli,...
+    pool_choices,...
+    pool_choicetimes,...
+    'variablenames',varnames);
+
+head(bhv_table)
+return;
 
 %% enforce selection
 selected_flags = ismember(pool_types,selected_types);
@@ -337,29 +368,6 @@ for kk = 1 : n_clusters
             'linewidth',1.5,...
             'linestyle',repmat('-',1,1+~outcome_set(ii)));
     end
-
-    %% plot average movement times
-
-    % iterate through outcomes
-    %     for ii = 1 : n_outcomes
-    %         errorbar(sps(4),stimulus_set,mt.med(:,ii,:),...
-    %             mt.iqr(:,ii,1),...
-    %             mt.iqr(:,ii,2),...
-    %             'color',cluster_clrs(kk,:),...
-    %             'marker','none',...
-    %             'linewidth',.5,...
-    %             'linestyle','none',...
-    %             'capsize',0,...
-    %             'handlevisibility','off');
-    %         plot(sps(4),stimulus_set,mt.med(:,ii,:),...
-    %             'color',cluster_clrs(kk,:),...
-    %             'marker','o',...
-    %             'markeredgecolor',bg_clr,...
-    %             'markerfacecolor',cluster_clrs(kk,:),...
-    %             'markersize',7.5,...
-    %             'linewidth',1.5,...
-    %             'linestyle',repmat('-',1,1+~outcome_set(ii)));
-    %     end
 end
 
 %% TYPES
@@ -481,29 +489,6 @@ for kk = 1 : n_types
             'linewidth',1.5,...
             'linestyle',repmat('-',1,1+~outcome_set(ii)));
     end
-
-    %% plot average movement times
-
-    % iterate through outcomes
-    %     for ii = 1 : n_outcomes
-    %         errorbar(sps(4+n_cols),stimulus_set,mt.med(:,ii,:),...
-    %             mt.iqr(:,ii,1),...
-    %             mt.iqr(:,ii,2),...
-    %             'color',type_clrs(kk,:),...
-    %             'marker','none',...
-    %             'linewidth',.5,...
-    %             'linestyle','none',...
-    %             'capsize',0,...
-    %             'handlevisibility','off');
-    %         plot(sps(4+n_cols),stimulus_set,mt.med(:,ii,:),...
-    %             'color',type_clrs(kk,:),...
-    %             'marker','o',...
-    %             'markeredgecolor',bg_clr,...
-    %             'markerfacecolor',type_clrs(kk,:),...
-    %             'markersize',7.5,...
-    %             'linewidth',1.5,...
-    %             'linestyle',repmat('-',1,1+~outcome_set(ii)));
-    %     end
 end
 
 %% legends
