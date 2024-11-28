@@ -6,7 +6,6 @@ clc;
 data_file = 'bhv';
 data_path = fullfile(pwd,[data_file,'.mat']);
 load(data_path);
-n_trials = size(bhv_table,1);
 
 %% subject selection
 subjects = cellstr(unique(bhv_table.subject));

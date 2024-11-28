@@ -6,7 +6,7 @@ clc;
 %% path settings
 institute = 'ccu';
 root_path = fullfile(dropboxdir,...
-    'data','fr','humans','vmu24',institute);
+    'data','fr','humans','vmu24','data',institute);
 bhv_path = fullfile(root_path,'behavior');
 mouse_path = fullfile(root_path,'mouse trajectories');
 gaped_path = fullfile(root_path,'gaped');
