@@ -184,7 +184,7 @@ n_durations = numel(duration_set);
 psy = struct();
 
 prev_choice = [nan;bhv_table.choice.long(1:end-1)];
-prev_stim = [nan;bhv_table.stimulus.duration(1:end-1)];% > mean(duration_set);
+prev_stim = [nan;bhv_table.stimulus.duration(1:end-1)]; % > mean(duration_set);
 prev_iti = [nan;bhv_table.iti(1:end-1)];
 prev = prev_stim; % (prev_choice * 2 - 1) .* prev_stim;
 prev_set = unique(prev(~isnan(prev)));

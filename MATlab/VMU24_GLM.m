@@ -7,136 +7,255 @@ data_file = 'bhv';
 data_path = fullfile(pwd,[data_file,'.mat']);
 load(data_path);
 
+%%
+selection_flags = ...
+    bhv_table.cohort == 'VMU' & ...
+    ...bhv_table.variant.interface == 'mouse' & ...
+    ~ismember(bhv_table.subject,{'04pvn','08pvn','margarida2','paco'});
+bhv_table = bhv_table(selection_flags,:);
+n_trials = size(bhv_table,1);
+
 %% subject selection
 subjects = cellstr(unique(bhv_table.subject));
 n_subjects = numel(subjects);
 
-%%
+%% 
+stimuli = bhv_table.stimulus.duration;
+choices = bhv_table.choice.long;
+itis = bhv_table.iti;
 
+%% stimulus settings
+meta.stimulus.set = unique(stimuli(~isnan(stimuli)))';
+meta.stimulus.labels = num2cell(meta.stimulus.set);
+meta.stimulus.boundary = mean(meta.stimulus.set);
+meta.stimulus.n = numel(meta.stimulus.set);
 
-%% trial selection
-transition_flags = bhv_table.subject ~= [bhv_table.subject(end);bhv_table.subject(1:end-1)];
-curr_premature = bhv_table.choice.premature;
-prev_premature = [0;curr_premature(1:end-1)];
-valid_flags = ...
-    ~curr_premature & ...
-    ~prev_premature & ...
-    ~transition_flags;
+%% difficulty settings
+meta.difficulty.set = unique(round(...
+    abs(meta.stimulus.set - meta.stimulus.boundary),2));
+meta.difficulty.labels = num2cell(meta.difficulty.set);
+meta.difficulty.n = numel(meta.difficulty.set);
+
+%% axes settings
+
+% default properties
+axesopt.default.plotboxaspectratio = [1,1,1];
+axesopt.default.ticklength = [1,1] * .025;
+axesopt.default.linewidth = 2;
+axesopt.default.fontsize = 13;
+axesopt.default.nextplot = 'add';
+axesopt.default.tickdir = 'out';
+axesopt.default.box = 'off';
+axesopt.default.layer = 'top';
 
 %% design matrix
 
-% number of trials to look back
-k = 1;
+% data preparation
+transition_flags = bhv_table.subject ~= [bhv_table.subject(end);bhv_table.subject(1:end-1)];
+curr_premature = bhv_table.choice.premature;
+prev_premature = [0;curr_premature(1:end-1)];
 
-%
-stimuli = bhv_table.stimulus.duration;
-choices = bhv_table.choice.long;
+stim_long = stimuli >= meta.stimulus.boundary;
+curr_stim_long = stim_long * 2 - 1;
+prev_stim_long = [0;curr_stim_long(1:end-1)];
+prev_stim_long(transition_flags) = 0;
 
-stimulus_set = unique(stimuli);
-choice_set = unique(choices);
+difficulties = round(abs(stimuli - meta.stimulus.boundary),2);
+prev_difficulties_1 = [0;difficulties(1:end-1)];
+prev_difficulties_1(transition_flags) = 0;
 
-%
-prev_stimuli = [nan; stimuli(1:end-1)];
-prev_choices = [nan; choices(1:end-1)];
+curr_stimuli = stimuli == meta.stimulus.set;
+prev_stimuli_1 = [zeros(1,meta.stimulus.n);curr_stimuli(1:end-1,:)];
+prev_stimuli_1(transition_flags,:) = 0;
+prev_stimuli_2 = [zeros(1,meta.stimulus.n);prev_stimuli_1(1:end-1,:)];
+prev_stimuli_2(transition_flags,:) = 0;
 
-%
-X_s = stimuli == stimulus_set';
-X_c = choices == choice_set';
+curr_difficulty = difficulties == meta.difficulty.set;
+prev_difficulty_1 = [zeros(1,meta.difficulty.n);curr_difficulty(1:end-1,:)];
+prev_difficulty_1(transition_flags,:) = 0;
 
-% interactions
-X_i = choices .* stimuli == unique(choices(valid_flags) .* stimuli(valid_flags))';
+choicelong =  bhv_table.choice.long;
+prev_choicelong_1 = [false;choicelong(1:end-1)];
+prev_choicelong_1(transition_flags) = 0;
+prev_choicelong_2 = [false;prev_choicelong_1(1:end-1)];
+prev_choicelong_2(transition_flags) = 0;
 
-% trial history
-X_s_prev = prev_stimuli == stimulus_set';
-X_c_prev = prev_choices == choice_set';
+curr_choice = bhv_table.choice.long * 2 - 1;
+curr_choice(curr_premature) = 0;
+prev_choice_1 = [0;curr_choice(1:end-1)];
+prev_choice_1(transition_flags) = 0;
+prev_choice_2 = [0;prev_choice_1(1:end-1)];
+prev_choice_2(transition_flags) = 0;
+prev_choice_3 = [0;prev_choice_2(1:end-1)];
+prev_choice_3(transition_flags) = 0;
+choice_hist = [prev_choice_3,prev_choice_2,prev_choice_1,curr_choice];
 
-%
+curr_premature = bhv_table.choice.premature; % * 2 - 1;
+prev_premature_1 = [0;curr_premature(1:end-1)];
+prev_premature_1(transition_flags) = 0;
+prev_premature_2 = [0;prev_premature_1(1:end-1)];
+prev_premature_2(transition_flags) = 0;
+premature_hist = [prev_premature_2,prev_premature_1];
+
+prev_stimchoice_1 = prev_stimuli_1 .* prev_choice_1;
+prev_stimchoice_2 = prev_stimuli_2 .* prev_choice_2;
+
+difficulty_correct = curr_difficulty & bhv_table.choice.correct;
+difficulty_error = curr_difficulty & ~bhv_table.choice.correct;
+curr_stim_correct = curr_stimuli & bhv_table.choice.correct;
+curr_stim_error = curr_stimuli & ~bhv_table.choice.correct;
+
+prev_stim_choicelong_1 = prev_stimuli_1 & prev_choicelong_1;
+prev_stim_choiceshort_1 = prev_stimuli_1 & ~prev_choicelong_1;
+
+iti_set = unique(itis);
+curr_iti = itis == iti_set';
+prev_iti = [zeros(1,numel(iti_set));curr_iti(1:end-1,:)];
+
+% construct design matrix
 design_table = table(...
-    X_c_prev,...
-    X_s_prev,...
-    X_s...
+    ...choice_hist(:,1:end-1),...
+    ...bhv_table.stimulus.category == {'negative','neutral','positive'},...unique(bhv_table.stimulus.category)',...
+    prev_stim_choiceshort_1(:,1:end-2),...
+    prev_stim_choicelong_1(:,3:end),...
+    ...prev_stimuli_1,...
+    ...prev_iti,...
+    curr_stimuli...
+    ...curr_temperature...
     );
 design = double(design_table.Variables);
 coeff_names = ['intercept',design_table.Properties.VariableNames];
 n_coeffs = size(design,2) + 1;
 
+%% trial selection
+valid_flags = ...
+    bhv_table.choice.delay < quantile(bhv_table.choice.delay,.99) & ...
+    ~curr_premature & ...
+    ~prev_premature & ...
+    ~transition_flags;
+
 %% feature normalization
 
-% z-scoring
-mus = nanmean(design,1);
-sigs = nanstd(design,0,1);
-zdesign = (design - mus) ./ sigs;
+% preallocation
+zdesign = nan(n_trials,n_coeffs - 1);
+mus = nan(n_subjects,n_coeffs - 1);
+sigs = nan(n_subjects,n_coeffs - 1);
+
+% iterate through subjects
+for ss = 1 : n_subjects
+    subject = subjects{ss};
+    subject_flags = bhv_table.subject == subject;
+    trial_flags = ...
+        valid_flags & ...
+        subject_flags;
+    
+    % z-scoring
+    mus(ss,:) = nanmean(design(trial_flags,:));
+    sigs(ss,:) = 1; %nanstd(design(trial_flags,:));
+    zdesign(trial_flags,:) = ...
+        (design(trial_flags,:) - mus(ss,:)) ./ sigs(ss,:);
+end
+
+% fix nans
+zdesign(isnan(zdesign)) = 0;
 
 %% response variable
 
 % construct response variable
-response = choices;
+response = bhv_table.choice.long;
 
-%% trial selection
-trial_flags = ...
-    ...i1 == i_set(i1_mode_idx) & ...
-    ...subject_ids == 3 & ...
-    valid_flags;
-design(~trial_flags,:) = nan;
-zdesign(~trial_flags,:) = nan;
-response(~trial_flags) = nan;
-n_trials = size(design,1);
+%% cross-validation settings
+cv_k = 100;
 
 %% GLM
 
 % distribution selection
 distro = 'binomial';
 
-% fit GLM
-[B,mdlinfo] = lassoglm(...
-    zdesign,response,distro,...
-    'standardize',true,...
-    'lambda',1e-1,...
-    'alpha',1e-2,...
-    'CV',10);
-[~,nullinfo] = lassoglm(...
-    zdesign*0,response,distro,...
-    'standardize',true,...
-    'lambda',1e-1,...
-    'alpha',1e-2,...
-    'CV',10);
+% preallocation
+n_coeffs = size(design,2) + 1;
+lambdas = nan(n_subjects,1);
+yhat = nan(n_trials,1);
+r2 = nan(n_subjects,1);
+pvals = nan(n_subjects,1);
+coeffs = nan(n_subjects,n_coeffs);
 
-% extract coefficients~
-coeffs = [...
-    mdlinfo.Intercept(mdlinfo.IndexMinDeviance);...
-    B(:,mdlinfo.IndexMinDeviance)...
-    ];
+% iterate through subjects
+for ss = 1 : n_subjects
+    subject = subjects{ss};
+    progressreport(ss,n_subjects,...
+        sprintf('fitting %s (%i/%i)',subject,ss,n_subjects));
 
-% no regularization
-% mdl = fitglm(zdesign,response,...
-%     'distribution',distro);
-% coeffs = mdl.Coefficients.Estimate;
+    subject_flags = bhv_table.subject == subject;
+    trial_flags = ...
+        valid_flags & ...
+        subject_flags;
+    trial_idcs = find(trial_flags);
+    n_trials = numel(trial_idcs);
+    
+    % fit GLM
+    X = zdesign(trial_flags,:);
+    y = response(trial_flags);
+    [B,info] = lassoglm(X,y,distro,...
+        'standardize',true,...
+        'lambda',1e-1,...
+        'alpha',1e-2,...
+        'CV',10);
+    [~,null] = lassoglm(X,y(randperm(n_trials)),distro,...
+        'standardize',true,...
+        'lambda',1e-1,...
+        'alpha',1e-2,...
+        'CV',10);
+    
+    % extract coefficients
+    lambdas(ss) = info.Lambda(info.IndexMinDeviance);
+    coeffs(ss,:) = [...
+        info.Intercept(info.IndexMinDeviance);...
+        B(:,info.IndexMinDeviance)...
+        ];
+    
+    % store p-value
+    pvals(ss) = 1 - chi2cdf(...
+        info.Deviance(info.IndexMinDeviance),...
+        info.DF(info.IndexMinDeviance));
 
-% compute pseudo r-squared
-pseudo_r2 = (nullinfo.Deviance - mdlinfo.Deviance) / nullinfo.Deviance;
-pseudo_stimuli = [ones(n_trials,1),zdesign] * coeffs;
+    % model predictions
+    yhat(trial_flags) = 1 ./ (1 + exp(-coeffs(ss,:) * ...
+        [ones(sum(trial_flags),1),zdesign(trial_flags,:)]'));
+    
+    % compute r-squared
+    ss_tot = nansum((response(trial_flags) - nanmean(response(trial_flags))) .^ 2);
+    ss_res = nansum((response(trial_flags) - yhat(trial_flags)) .^ 2);
+    r2(ss) = 1 - ss_res / ss_tot;
+    
+    % compute pseudo-r-squared
+    r2(ss) = 1 - info.Deviance / null.Deviance;
+end
+
+%% normalize by intercept
+norm_coeffs = coeffs; % ./ coeffs(:,1);
+
+%% compute r-squared
+ss_tot = nansum((response - nanmean(response)) .^ 2);
+ss_res = nansum((response - yhat) .^ 2);
+R2 = 1 - ss_res / ss_tot
+R2 = nanmean(r2)
 
 %% figure initialization
 xxticklabels = [...
     '\beta_0',...
-    arrayfun(@(x)sprintf('%s=%i',upper(coeff_names{2}(3:end)),x),stimulus_set','uniformoutput',false),...
-    arrayfun(@(x)sprintf('%s=%i',upper(coeff_names{3}(3:end)),x),choice_set','uniformoutput',false),...
-    arrayfun(@(x)sprintf('%s=%i',upper(coeff_names{4}(3:end)),x),stimulus_set','uniformoutput',false),...
-    arrayfun(@(x)sprintf('%s=%i',upper(coeff_names{5}(3:end)),x),choice_set','uniformoutput',false),...
+    arrayfun(@(x)sprintf('S_{t-1}\\times%.2f_{t-1}',x),...
+        meta.stimulus.set(1:end-2),'uniformoutput',false),...
+    arrayfun(@(x)sprintf('L_{t-1}\\times%.2f_{t-1}',x),...
+        meta.stimulus.set(1+2:end),'uniformoutput',false),...
+    arrayfun(@(x)sprintf('%.2f_t',x),...
+        meta.stimulus.set,'uniformoutput',false),...
     ];
-fig = figure('name',mfilename,...
-    'windowstate','maximized',...
+figure('name',mfilename,...
     'numbertitle','off',...
     'inverthardcopy','off',...
     'color','w');
-set(gca,...
-    'nextplot','add',...
-    'tickdir','out',...
-    'fontsize',12,...
-    'linewidth',2,...
-    'layer','top',...
-    'xcolor','k',...
-    'ycolor','k',...
+set(gca,axesopt.default,...
     'xlim',[1,n_coeffs]+[-1,1],...
     'xtick',1:n_coeffs,...
     'xticklabel',xxticklabels,...
@@ -145,53 +264,73 @@ set(gca,...
     'ytick',0,...[0,1],...
     'ticklabelinterpreter','tex',...
     'plotboxaspectratio',[3,1,1],...
-    'clipping','off');
-title(sprintf('%s>%s~Binomial(\\phi(\\betaX))',s2_lbl,s1_lbl));
-xlabel('X');
-ylabel('$\beta$',...
+    'clipping','off',...
+    'ycolor','k');
+title(sprintf('L_{t}~%s(\\phi(\\betaX))',distro));
+ylabel('$\beta_i$',...
     'interpreter','latex');
 
 %% plot fit coefficients
+cla;
+offset = 2;
 
 % plot coefficient relationships
-coeff_idcs_offset = 0;
-coeff_x_offset = 0;
+coeff_offset = 0;
 for jj = 1 : numel(coeff_names)
     coeff_name = coeff_names{jj};
-    if jj > 1
-        prev_coeff_name = coeff_names{jj-1};
-    end
     if strcmpi(coeff_name,'intercept')
         coeff_size = 1;
     else
         coeff_size = size(design_table.(coeff_name),2);
     end
-    coeff_idcs = (1 : coeff_size) + coeff_idcs_offset;
-    coeff_idcs_offset = coeff_idcs_offset + coeff_size;
-    if jj > 1 && contains(coeff_name,prev_coeff_name)
-        coeff_x_offset = coeff_x_offset + coeff_size;
-        %         markersize = markersize * .75;
-        color = color + [1,1,1] * .45;
-    else
-        markersize = 8.5;
-        color = [0,0,0];
+    coeff_idcs = (1 : coeff_size) + coeff_offset;
+    coeff_offset = coeff_offset + coeff_size;
+    plot(coeff_idcs,nanmean(norm_coeffs(:,coeff_idcs)),...
+        'color','k',...
+        'marker','none',...
+        'hittest','off',...
+        'linewidth',2);
+    
+    % iterate through subjects
+    offsets = ((1:n_subjects) - n_subjects/2) * .01;
+    for ss = 1 : n_subjects
+        plot(coeff_idcs+offsets(ss),norm_coeffs(ss,coeff_idcs),...
+            'color','k',...
+            'marker','none',...
+            'hittest','off',...
+            'linewidth',.1);
     end
-    coeff_x = coeff_idcs - coeff_x_offset;
-    p = plot(coeff_x,coeffs(coeff_idcs),...
-        'color',color,...
+end
+
+% iterate through coefficients
+for bb = 1 : n_coeffs
+    noise = randn(n_subjects,1) * .05;
+    grapeplot(bb+offsets,norm_coeffs(:,bb),...
         'marker','o',...
-        'markersize',markersize,...
-        'markeredgecolor',color,...
-        'markerfacecolor','w',...
-        'linewidth',1.5);
-    if jj > 1 && contains(coeff_name,prev_coeff_name)
-        uistack(p,'bottom');
+        'markersize',7.5,...
+        'markeredgecolor',[0,0,0],...
+        'markerfacecolor',[1,1,1],...
+        'linewidth',1,...
+        'labels',cellstr(subjects));
+    [~,pval] = ttest(norm_coeffs(:,bb));
+    if pval < .01
+        clr = 'y';
+    elseif pval < .1
+        clr = 'r';
+    else
+        clr = 'k';
     end
+    plot(bb,nanmean(norm_coeffs(:,bb)),...
+        'marker','o',...
+        'markersize',8.5,...
+        'markeredgecolor','k',...
+        'markerfacecolor','k',...
+        'linewidth',1.5);
 end
 
 % update axes
 axis tight;
-xlim(xlim+[-1,1]*.99);
+xlim([1,n_coeffs]+[-1,1]);
 ylim(ylim+[-1,1]*.05*range(ylim));
 
 % zero line
@@ -200,16 +339,25 @@ p = plot(xlim,[0,0],'--k',...
 uistack(p,'bottom');
 
 % iterate through coefficients
-for bb = 1 : max(xlim) - 1
+for bb = 1 : n_coeffs
     p = plot([1,1]*bb,ylim,':k',...
         'hittest','off');
     uistack(p,'bottom');
 end
 
-% r-squared annotation
-text(.95,.05,sprintf('pseudo-R^{2} = %.2f',pseudo_r2),...
-    'fontsize',12,...
-    'color','k',...
-    'horizontalalignment','right',...
-    'verticalalignment','bottom',...
-    'units','normalized');
+% iterate through subjects
+subject_idx = 1;
+for ss = 1 : n_subjects
+    subject = subjects{ss};
+    if isnan(r2(ss))
+        continue;
+    end
+    xpos = .033 + .075 * (3 - mod(subject_idx,4));
+    ypos = 1 - .033 * (subject_idx + mod(subject_idx,4)) / 4;
+    text(xpos,ypos,sprintf('pseudo R^{2}_{%s}=%.2f',subject,r2(ss)),...
+        'fontsize',8,...
+        'horizontalalignment','left',...
+        'verticalalignment','bottom',...
+        'units','normalized');
+    subject_idx = subject_idx + 1;
+end

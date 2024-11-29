@@ -4,18 +4,18 @@ clear;
 clc;
 
 %% selection settings
-institute = 'ccu';
+institute = 'vmu';
 selected_types = {'dogs','wolves'};
 % selected_types = {'horses','zebras'};
 selected_types = {'negative','neutral','positive'};
-% selected_types = {'dogs','horses','negative','neutral','positive','zebras','wolves'};
+selected_types = {'dogs','horses','negative','neutral','positive','zebras','wolves'};
 trial_cutoff = inf;
 
 %% path settings
 root_path = fullfile(dropboxdir,...
     'data','fr','humans','vmu24');
-bhv_path = fullfile(root_path,institute,'behavior');
-mouse_path = fullfile(root_path,institute,'mouse trajectories');
+bhv_path = fullfile(root_path,'data',institute,'behavior');
+mouse_path = fullfile(root_path,'data',institute,'mouse trajectories');
 gaped_path = fullfile(root_path,'gaped');
 
 %% session selection
