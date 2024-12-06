@@ -48,7 +48,7 @@ n_types = numel(type_set);
 %% parse cohort data
 data_dir = dir(data_path);
 data_dir = data_dir(3:end);
-cohorts = string(vertcat(data_dir.name));
+cohorts = lower(string(vertcat(data_dir.name)));
 n_cohorts = numel(data_dir);
 
 %% utility function handles

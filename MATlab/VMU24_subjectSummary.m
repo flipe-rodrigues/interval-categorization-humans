@@ -4,7 +4,7 @@ clear;
 clc;
 
 %% path settings
-institute = 'ccu';
+institute = 'vmu';
 root_path = fullfile(dropboxdir,...
     'data','fr','humans','vmu24','data',institute);
 bhv_path = fullfile(root_path,'behavior');
