@@ -124,6 +124,8 @@ public class TaskManager : Singleton<TaskManager>
         this.TrialCounter++;
 
         _initiationButton.LightsOn();
+        _shortButton.LightsOn();
+        _longButton.LightsOn();
 
         while (!_initiationButton.IsPressed && (isInitiationRequired || this.TrialCounter == 1))
         {
@@ -134,6 +136,8 @@ public class TaskManager : Singleton<TaskManager>
 
         stimulusPanel.LightsOn();
         _initiationButton.LightsOff();
+        _shortButton.LightsOff();
+        _longButton.LightsOff();
 
         float duration = stimulusPanel.CurrentStimulus.Duration;
         float choiceTime = Time.timeSinceLevelLoad + duration;
@@ -143,9 +147,6 @@ public class TaskManager : Singleton<TaskManager>
         {
             if (_longButton.IsPressed || _shortButton.IsPressed || (!_initiationButton.IsPressed && isFixationRequired))
             {
-                _initiationButton.LightsOff();
-                _longButton.LightsOff();
-                _shortButton.LightsOff();
                 stimulusPanel.LightsOff();
 
                 feedbackPanel.Abort();
@@ -179,8 +180,8 @@ public class TaskManager : Singleton<TaskManager>
 
         float reactionTime = Time.timeSinceLevelLoad;
 
-        _longButton.LightsOn();
-        _shortButton.LightsOn();
+        //_longButton.LightsOn();
+        //_shortButton.LightsOn();
         stimulusPanel.LightsOff();
 
         while (_initiationButton.IsTouched)
@@ -241,9 +242,9 @@ public class TaskManager : Singleton<TaskManager>
 
         choiceLeft = contingency == Contingency.RightIsShortLeftIsLong ? choiceLong : 1 - choiceLong;
 
-        _initiationButton.LightsOff();
-        _longButton.LightsOff();
-        _shortButton.LightsOff();
+        //_initiationButton.LightsOff();
+        //_longButton.LightsOff();
+        //_shortButton.LightsOff();
 
         _fileHandler.WriteBhvTrial(duration, reactionTime, movementTime, choiceLeft, choiceLong, choiceCorrect, stimulusPanel.CurrentStimulus.InterTrialInterval, stimulusPanel.GetImgName());
         _fileHandler.WriteTrackingTrial();

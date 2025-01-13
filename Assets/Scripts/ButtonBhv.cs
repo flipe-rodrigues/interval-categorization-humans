@@ -39,7 +39,7 @@ public class ButtonBhv : MonoBehaviour
     [Range(0, 100)]
     public float relaxSpeed = 1;
     [Range(1, 5)]
-    public float changeSpeed = 2f;
+    public float lightChangeSpeed = 2f;
     [Range(0, 1)]
     public float maxLightIntensity = .25f;
     [ColorUsage(false, true)]
@@ -103,7 +103,7 @@ public class ButtonBhv : MonoBehaviour
 
     void Update()
     {
-        float lerpSpeed = (_targetIntensity == 1 ? 1 : 5) * changeSpeed * Time.deltaTime;
+        float lerpSpeed = (_targetIntensity == 1 ? 1 : 5) * lightChangeSpeed * Time.deltaTime;
         this.MainEmissionColor = Color.Lerp(this.MainEmissionColor, _targetMainColor * 3f, lerpSpeed);
         this.FrameEmissionColor = Color.Lerp(this.FrameEmissionColor, _targetFrameColor * 3f, lerpSpeed);
         this.LabelEmissionColor = this.MainEmissionColor;
