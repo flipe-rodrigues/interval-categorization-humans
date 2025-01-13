@@ -106,7 +106,7 @@ public class ButtonBhv : MonoBehaviour
         float lerpSpeed = (_targetIntensity == 1 ? 1 : 5) * lightChangeSpeed * Time.deltaTime;
         this.MainEmissionColor = Color.Lerp(this.MainEmissionColor, _targetMainColor * 3f, lerpSpeed);
         this.FrameEmissionColor = Color.Lerp(this.FrameEmissionColor, _targetFrameColor * 3f, lerpSpeed);
-        this.LabelEmissionColor = this.MainEmissionColor;
+        this.LabelEmissionColor = this.FrameEmissionColor;
         _light.intensity = Mathf.Lerp(_light.intensity, _targetIntensity, lerpSpeed);
         this.Relax();
 
@@ -114,7 +114,7 @@ public class ButtonBhv : MonoBehaviour
         {
             if (Input.GetKeyDown((KeyCode)assignedKey))
             {
-                _rigidbody.AddForce(Vector3.down * .75f, ForceMode.Impulse);
+                _rigidbody.AddForce(Vector3.down * 1.5f, ForceMode.Impulse);
                 _pressing = true;
             }
 
@@ -186,7 +186,7 @@ public class ButtonBhv : MonoBehaviour
             return;
         }
 
-        _rigidbody.AddForce(Vector3.down * .75f, ForceMode.Impulse);
+        _rigidbody.AddForce(Vector3.down * 1.5f, ForceMode.Impulse);
         _pressing = true;
     }
 

@@ -360,7 +360,7 @@ Transform:
   m_GameObject: {fileID: 228034664}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.35, y: 0, z: -0.5}
+  m_LocalPosition: {x: -0.35, y: 0, z: -0.55}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -608,7 +608,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &439200291
 Transform:
   m_ObjectHideFlags: 0
@@ -1329,8 +1329,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   assignedKey: 32
   buttonRole: 1
-  relaxSpeed: 1
-  lightChangeSpeed: 2
+  relaxSpeed: 10
+  lightChangeSpeed: 5
   maxLightIntensity: 0.1
   bulbColor: {r: 1, g: 0.95686275, b: 0.8392157, a: 0.29411766}
   frameRenderer: {fileID: 2101691412}
@@ -1348,7 +1348,7 @@ Rigidbody:
   m_GameObject: {fileID: 745649107}
   serializedVersion: 4
   m_Mass: 1
-  m_Drag: 10
+  m_Drag: 20
   m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
@@ -1601,8 +1601,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   assignedKey: 107
   buttonRole: 2
-  relaxSpeed: 1
-  lightChangeSpeed: 2
+  relaxSpeed: 10
+  lightChangeSpeed: 5
   maxLightIntensity: 0.1
   bulbColor: {r: 1, g: 0.95686275, b: 0.8392157, a: 0.29411766}
   frameRenderer: {fileID: 747913976}
@@ -1620,7 +1620,7 @@ Rigidbody:
   m_GameObject: {fileID: 776834422}
   serializedVersion: 4
   m_Mass: 1
-  m_Drag: 10
+  m_Drag: 20
   m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
@@ -2634,8 +2634,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   assignedKey: 100
   buttonRole: 0
-  relaxSpeed: 1
-  lightChangeSpeed: 2
+  relaxSpeed: 10
+  lightChangeSpeed: 5
   maxLightIntensity: 0.1
   bulbColor: {r: 1, g: 0.95686275, b: 0.8392157, a: 0.29411766}
   frameRenderer: {fileID: 1367086210}
@@ -2653,7 +2653,7 @@ Rigidbody:
   m_GameObject: {fileID: 939391782}
   serializedVersion: 4
   m_Mass: 1
-  m_Drag: 10
+  m_Drag: 20
   m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
@@ -3547,8 +3547,8 @@ Transform:
   m_GameObject: {fileID: 1607953079}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.05, z: 1}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0.25, z: 1}
+  m_LocalScale: {x: 1.6666666, y: 1.6666666, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1771643202}
