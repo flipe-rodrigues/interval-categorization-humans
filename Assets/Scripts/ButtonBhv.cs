@@ -5,6 +5,7 @@ public class ButtonBhv : MonoBehaviour
 {
     public bool IsPressed => _pressing;
     public bool IsTouched => _contact;
+    public bool IsActive { get; set; }
 
     private Color MainEmissionColor
     {
@@ -38,7 +39,7 @@ public class ButtonBhv : MonoBehaviour
     public ButtonRole buttonRole;
     [Range(0, 100)]
     public float relaxSpeed = 1;
-    [Range(1, 5)]
+    [Range(1, 10)]
     public float lightChangeSpeed = 2f;
     [Range(0, 1)]
     public float maxLightIntensity = .25f;
@@ -104,7 +105,7 @@ public class ButtonBhv : MonoBehaviour
     void Update()
     {
         float lerpSpeed = (_targetIntensity == 1 ? 1 : 5) * lightChangeSpeed * Time.deltaTime;
-        this.MainEmissionColor = Color.Lerp(this.MainEmissionColor, _targetMainColor * 3f, lerpSpeed);
+        this.MainEmissionColor = Color.Lerp(this.MainEmissionColor, _targetMainColor * 0.5f, lerpSpeed);
         this.FrameEmissionColor = Color.Lerp(this.FrameEmissionColor, _targetFrameColor * 3f, lerpSpeed);
         this.LabelEmissionColor = this.FrameEmissionColor;
         _light.intensity = Mathf.Lerp(_light.intensity, _targetIntensity, lerpSpeed);
@@ -128,8 +129,8 @@ public class ButtonBhv : MonoBehaviour
 
     public void LightsOn()
     {
-        _targetMainColor = bulbColor;
-        _targetIntensity = maxLightIntensity;
+        //_targetMainColor = bulbColor;
+        //_targetIntensity = maxLightIntensity;
     }
 
     public void LightsOff()
@@ -149,17 +150,26 @@ public class ButtonBhv : MonoBehaviour
 
     public void ContactBegin()
     {
+        if (!this.IsActive)
+        {
+            return;
+        }
+
+        _targetMainColor = bulbColor;
         _targetFrameColor = bulbColor;
+        _targetIntensity = maxLightIntensity;
         _contact = true;
     }
 
     public void ContactEnd()
     {
+        _targetMainColor = Color.clear;
         _targetFrameColor = Color.clear;
+        _targetIntensity = 0;
         _contact = false;
     }
 
-    private void OnMouseEnter()
+    private void OnMouseOver()
     {
         if (TaskManager.Instance.inputMode != TaskManager.InputMode.Mouse)
         {

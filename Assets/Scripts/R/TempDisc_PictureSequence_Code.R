@@ -98,6 +98,7 @@ generate_test_sequence <- function(picture_info, picture_counts, occurrences, du
     n_pictures <- length(picture_set)
     
     if (ptype %in% c("DogAggressive", "DogNeutral", "WolfAggressive", "WolfNeutral")) {
+      
       # For Dog and Wolf pictures
       durations_rep <- c(
         rep(c(200, 2200), each = 3),
@@ -111,6 +112,7 @@ generate_test_sequence <- function(picture_info, picture_counts, occurrences, du
       )
       n_rep <- 34
     } else {
+      
       # For other pictures
       durations_rep <- c(
         rep(c(200, 2200), each = 3),
@@ -158,6 +160,7 @@ shuffle_with_constraints <- function(data) {
 
 # Function to combine training and test sequences
 combine_sequences <- function(phase1, phase2, test_sequence) {
+  
   # Shuffle each phase separately
   shuffled_phase1 <- shuffle_with_constraints(phase1)
   shuffled_phase2 <- shuffle_with_constraints(phase2)

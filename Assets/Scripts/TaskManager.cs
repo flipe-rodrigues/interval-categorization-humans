@@ -123,9 +123,13 @@ public class TaskManager : Singleton<TaskManager>
 
         this.TrialCounter++;
 
-        _initiationButton.LightsOn();
-        _shortButton.LightsOn();
-        _longButton.LightsOn();
+        _initiationButton.IsActive = true;
+        _shortButton.IsActive = false;
+        _longButton.IsActive = false;
+
+        //_initiationButton.LightsOn();
+        //_shortButton.LightsOn();
+        //_longButton.LightsOn();
 
         while (!_initiationButton.IsPressed && (isInitiationRequired || this.TrialCounter == 1))
         {
@@ -134,10 +138,13 @@ public class TaskManager : Singleton<TaskManager>
         trajectoryTracker.SyncPulse(new float[] { -200, -200, -200, -200, -200, Time.timeSinceLevelLoad });
         keyPressTracker.SyncPulse(-200);
 
+        _initiationButton.IsActive = false;
+        _initiationButton.ContactEnd();
+
         stimulusPanel.LightsOn();
-        _initiationButton.LightsOff();
-        _shortButton.LightsOff();
-        _longButton.LightsOff();
+        //_initiationButton.LightsOff();
+        //_shortButton.LightsOff();
+        //_longButton.LightsOff();
 
         float duration = stimulusPanel.CurrentStimulus.Duration;
         float choiceTime = Time.timeSinceLevelLoad + duration;
@@ -180,9 +187,12 @@ public class TaskManager : Singleton<TaskManager>
 
         float reactionTime = Time.timeSinceLevelLoad;
 
+        _shortButton.IsActive = true;
+        _longButton.IsActive = true;
+
+        stimulusPanel.LightsOff();
         //_longButton.LightsOn();
         //_shortButton.LightsOn();
-        stimulusPanel.LightsOff();
 
         while (_initiationButton.IsTouched)
         {
@@ -201,6 +211,11 @@ public class TaskManager : Singleton<TaskManager>
         }
         trajectoryTracker.SyncPulse(new float[] { -400, -400, -400, -400, -400, Time.timeSinceLevelLoad });
         keyPressTracker.SyncPulse(-400);
+
+        _shortButton.IsActive = false;
+        _longButton.IsActive = false;
+        _shortButton.ContactEnd();
+        _longButton.ContactEnd();
 
         movementTime = Time.timeSinceLevelLoad - movementTime;
 

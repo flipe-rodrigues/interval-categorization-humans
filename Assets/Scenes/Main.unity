@@ -1331,7 +1331,7 @@ MonoBehaviour:
   buttonRole: 1
   relaxSpeed: 10
   lightChangeSpeed: 5
-  maxLightIntensity: 0.1
+  maxLightIntensity: 0.01
   bulbColor: {r: 1, g: 0.95686275, b: 0.8392157, a: 0.29411766}
   frameRenderer: {fileID: 2101691412}
   initiationLabelRenderer: {fileID: 615838160}
@@ -1603,7 +1603,7 @@ MonoBehaviour:
   buttonRole: 2
   relaxSpeed: 10
   lightChangeSpeed: 5
-  maxLightIntensity: 0.1
+  maxLightIntensity: 0.01
   bulbColor: {r: 1, g: 0.95686275, b: 0.8392157, a: 0.29411766}
   frameRenderer: {fileID: 747913976}
   initiationLabelRenderer: {fileID: 1625744914}
@@ -2636,7 +2636,7 @@ MonoBehaviour:
   buttonRole: 0
   relaxSpeed: 10
   lightChangeSpeed: 5
-  maxLightIntensity: 0.1
+  maxLightIntensity: 0.01
   bulbColor: {r: 1, g: 0.95686275, b: 0.8392157, a: 0.29411766}
   frameRenderer: {fileID: 1367086210}
   initiationLabelRenderer: {fileID: 390838395}
