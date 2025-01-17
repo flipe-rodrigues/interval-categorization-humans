@@ -124,12 +124,15 @@ public class TaskManager : Singleton<TaskManager>
         this.TrialCounter++;
 
         _initiationButton.IsActive = true;
-        _shortButton.IsActive = false;
-        _longButton.IsActive = false;
+        _shortButton.IsActive = true;
+        _longButton.IsActive = true;
 
-        //_initiationButton.LightsOn();
-        //_shortButton.LightsOn();
-        //_longButton.LightsOn();
+        //if (this.inputMode == InputMode.Keyboard)
+        //{
+            _initiationButton.ContactBegin();
+            _shortButton.ContactBegin();
+            _longButton.ContactBegin();
+        //}
 
         while (!_initiationButton.IsPressed && (isInitiationRequired || this.TrialCounter == 1))
         {

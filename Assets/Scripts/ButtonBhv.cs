@@ -115,7 +115,7 @@ public class ButtonBhv : MonoBehaviour
         {
             if (Input.GetKeyDown((KeyCode)assignedKey))
             {
-                _rigidbody.AddForce(Vector3.down * 1.5f, ForceMode.Impulse);
+                _rigidbody.AddForce(Vector3.down * 1.75f, ForceMode.Impulse);
                 _pressing = true;
             }
 
@@ -129,8 +129,8 @@ public class ButtonBhv : MonoBehaviour
 
     public void LightsOn()
     {
-        //_targetMainColor = bulbColor;
-        //_targetIntensity = maxLightIntensity;
+        _targetMainColor = bulbColor;
+        _targetIntensity = maxLightIntensity;
     }
 
     public void LightsOff()
@@ -141,7 +141,7 @@ public class ButtonBhv : MonoBehaviour
 
     public void Relax()
     {
-        if (!this.IsPressed)
+        if (!this.IsPressed && this.IsActive)
         {
             Vector3 force = (_initialPosition - _transform.position) * relaxSpeed;
             _rigidbody.AddForce(force, ForceMode.Impulse);
@@ -169,25 +169,25 @@ public class ButtonBhv : MonoBehaviour
         _contact = false;
     }
 
-    private void OnMouseOver()
-    {
-        if (TaskManager.Instance.inputMode != TaskManager.InputMode.Mouse)
-        {
-            return;
-        }
+    //private void OnMouseOver()
+    //{
+    //    if (TaskManager.Instance.inputMode != TaskManager.InputMode.Mouse)
+    //    {
+    //        return;
+    //    }
 
-        this.ContactBegin();
-    }
+    //    this.ContactBegin();
+    //}
 
-    private void OnMouseExit()
-    {
-        if (TaskManager.Instance.inputMode != TaskManager.InputMode.Mouse)
-        {
-            return;
-        }
+    //private void OnMouseExit()
+    //{
+    //    if (TaskManager.Instance.inputMode != TaskManager.InputMode.Mouse)
+    //    {
+    //        return;
+    //    }
 
-        this.ContactEnd();
-    }
+    //    this.ContactEnd();
+    //}
 
     private void OnMouseDown()
     {
@@ -196,7 +196,7 @@ public class ButtonBhv : MonoBehaviour
             return;
         }
 
-        _rigidbody.AddForce(Vector3.down * 1.5f, ForceMode.Impulse);
+        _rigidbody.AddForce(Vector3.down * 1.75f, ForceMode.Impulse);
         _pressing = true;
     }
 
