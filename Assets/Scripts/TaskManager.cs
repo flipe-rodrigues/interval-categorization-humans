@@ -159,6 +159,11 @@ public class TaskManager : Singleton<TaskManager>
             {
                 stimulusPanel.LightsOff();
 
+                _shortButton.IsActive = false;
+                _longButton.IsActive = false;
+                _shortButton.ContactEnd();
+                _longButton.ContactEnd();
+
                 feedbackPanel.Abort();
 
                 if (_abortedPreviousTrial)

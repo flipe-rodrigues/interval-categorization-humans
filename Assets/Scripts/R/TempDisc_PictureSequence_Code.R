@@ -67,14 +67,14 @@ generate_training_sequence <- function(picture_info) {
   )
   
   # Phase 2: Intermediate times, randomized durations and pictures
-  phase2_durations <- c(200, 603, 931, 1200, 1469, 1797, 2200)
-  phase2_durations <- sample(rep(phase2_durations, times = c(3, 5, 7, 4, 7, 5, 3)))  # Randomize durations
-  phase2_itis <- c(iti_mu-200, iti_mu-603, iti_mu-931, iti_mu-1200, iti_mu-1469, iti_mu-1797, iti_mu-2200)
-  phase2_itis <- sample(rep(phase2_itis, times = c(3, 5, 7, 4, 7, 5, 3)))  
+  phase2_durations <- c(200, 603, 931, 1469, 1797, 2200)
+  phase2_durations <- sample(rep(phase2_durations, times = c(3, 6, 8, 8, 6, 3)))  # Randomize durations
+  phase2_itis <- c(iti_mu-200, iti_mu-603, iti_mu-931, iti_mu-1469, iti_mu-1797, iti_mu-2200)
+  phase2_itis <- sample(rep(phase2_itis, times = c(3, 6, 8, 8, 6, 3)))  
   
   # Check and adjust duration sequence
   while (length(phase2_durations) != 34) {
-    phase2_durations <- sample(rep(phase2_durations, times = c(3, 5, 7, 4, 7, 5, 3)))
+    phase2_durations <- sample(rep(phase2_durations, times = c(3, 6, 8, 8, 6, 3)))
   }
   
   # Now, create a vector that repeats each picture up to 3 times (max reps of 3)
@@ -113,14 +113,14 @@ generate_test_sequence <- function(picture_info, picture_counts, occurrences, du
       durations_rep <- c(
         rep(c(200, 2200), each = 3),
         rep(c(603, 1797), each = 5),
-        rep(c(931, 1469), each = 7), 
-        rep(c(1200), each=4)
+        rep(c(931, 1469), each = 6), 
+        rep(c(1200), each=6)
       )
       itis_rep <- c(
         rep(c(iti_mu-200, iti_mu-2200), each = 3),
         rep(c(iti_mu-603, iti_mu-1797), each = 5),
-        rep(c(iti_mu-931, iti_mu-1469), each = 7), 
-        rep(c(iti_mu-1200), each=4)
+        rep(c(iti_mu-931, iti_mu-1469), each = 6), 
+        rep(c(iti_mu-1200), each=6)
       )
       n_rep <- 34
     } else {
