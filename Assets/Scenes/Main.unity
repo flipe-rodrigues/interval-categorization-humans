@@ -1107,7 +1107,7 @@ MonoBehaviour:
   trajectoryTracker: {fileID: 1334734754}
   keyPressTracker: {fileID: 171561559}
   contingency: 1
-  inputMode: 1
+  inputMode: 0
 --- !u!114 &625718017
 MonoBehaviour:
   m_ObjectHideFlags: 0

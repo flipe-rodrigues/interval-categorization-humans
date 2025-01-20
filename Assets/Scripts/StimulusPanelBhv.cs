@@ -100,6 +100,9 @@ public class StimulusPanelBhv : MonoBehaviour
         _currentStimulus = _allStimuli[_stimulusIndex];
         _renderer.material.SetTexture("_MainTex", _currentStimulus.Image);
         _renderer.material.SetTexture("_EmissionMap", _currentStimulus.Image);
+        Debug.Log(_currentStimulus.Image.width);
+        Debug.Log(_currentStimulus.Image.height);
+        Debug.Log(_currentStimulus.Image.width / (float)_currentStimulus.Image.height);
         _transform.localScale = new Vector3(_currentStimulus.Image.width / (float)_currentStimulus.Image.height, 1, 1);
     }
 
