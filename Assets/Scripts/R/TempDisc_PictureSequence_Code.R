@@ -175,7 +175,6 @@ generate_test_sequence <- function(picture_info, picture_counts, occurrences, du
 
 # Function to shuffle data with constraints
 shuffle_with_constraints <- function(data) {
-  set.seed(123)
   data <- data[sample(nrow(data)), ]
   
   # Ensure no picture or duration repeats in direct succession
@@ -205,7 +204,10 @@ num_sequences <- 1000
 pb <- txtProgressBar(min = 0, max = num_sequences, style = 3)
 
 for (i in 1:num_sequences) {
-
+  
+  # ensure different sequence each time
+  set.seed(i)
+  
   # Generate sequences
   training_sequences <- generate_training_sequence(picture_info)
   phase1 <- training_sequences$phase1
@@ -215,13 +217,10 @@ for (i in 1:num_sequences) {
   
   #Save
   timestamp <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
-  file_name <- paste0("image_sequence_", timestamp, ".csv")
+  file_name <- paste0("image_sequence_", i, "_", timestamp, ".csv")
   save_dir = "F:/Documents/GitHub/Unity/interval-categorization-humans/Assets/Resources/Image Sequences"
   full_path <- file.path(save_dir, file_name)
   write.csv(final_sequence, file = full_path, row.names = FALSE)
-  
-  # ensures different timestamps
-  Sys.sleep(1)
   
   # Update progress bar
   setTxtProgressBar(pb, i)

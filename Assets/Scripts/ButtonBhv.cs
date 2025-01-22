@@ -113,7 +113,7 @@ public class ButtonBhv : MonoBehaviour
 
         if (TaskManager.Instance.inputMode == TaskManager.InputMode.Keyboard)
         {
-            if (Input.GetKeyDown((KeyCode)assignedKey))
+            if (Input.GetKeyDown((KeyCode)assignedKey) && this.transform.position.y > -.625) // hack to not allow for clicking the button into the pulpit
             {
                 _rigidbody.AddForce(Vector3.down * 1.75f, ForceMode.Impulse);
                 _pressing = true;
@@ -191,7 +191,7 @@ public class ButtonBhv : MonoBehaviour
 
     private void OnMouseDown()
     {
-        if (TaskManager.Instance.inputMode != TaskManager.InputMode.Mouse)
+        if (TaskManager.Instance.inputMode != TaskManager.InputMode.Mouse || this.transform.position.y < -.625) // hack to not allow for clicking the button into the pulpit
         {
             return;
         }
