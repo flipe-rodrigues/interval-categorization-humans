@@ -1,3 +1,4 @@
+PictureType,file_name,Condition
 DogNeutral,Dogs_60_LowAr_10-11_dn5.PNG,Test
 DogNeutral,Dogs_60_LowAr_10-84_dn12.PNG,Test
 DogNeutral,Dogs_60_LowAr_11-00_dn7.PNG,Test
@@ -22,7 +23,6 @@ DogAggressive,Dogs_80_HighAr_79-30_da5.PNG,Test
 DogAggressive,Dogs_80_HighAr_80-20_da8.PNG,Test
 DogAggressive,Dogs_80_HighAr_87-69_da14.PNG,Test
 DogAggressive,Dogs_80_HighAr_88-43_da6.PNG,Test
-PictureType,file_name,Condition
 Horse,Horses_NA_UnkA_NA_1_Horse_Pixaby_165106.PNG,Familiarity
 Horse,Horses_NA_UnkA_NA_2_Horse_Pixaby_Khamkhor.PNG,Familiarity
 Horse,Horses_NA_UnkA_NA_3_Horse_Pixaby_Alexas_Fotos2.PNG,Familiarity
