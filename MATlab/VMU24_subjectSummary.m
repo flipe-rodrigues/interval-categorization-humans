@@ -4,12 +4,13 @@ clear;
 clc;
 
 %% path settings
-institute = 'ccu';
+pilot = 'pilot ii';
+institute = 'vmu';
 root_path = fullfile(dropboxdir,...
-    'data','fr','humans','vmu24','data',institute);
-bhv_path = fullfile(root_path,'behavior');
-mouse_path = fullfile(root_path,'mouse trajectories');
+    'data','fr','humans','vmu24',pilot);
 gaped_path = fullfile(root_path,'gaped');
+bhv_path = fullfile(root_path,'cohorts',institute,'behavior');
+mouse_path = fullfile(root_path,'cohorts',institute,'mouse trajectories');
 
 %% directory settings
 bhv_dir = dir([bhv_path,filesep,'*.csv']);

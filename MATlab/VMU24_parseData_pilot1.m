@@ -4,14 +4,11 @@ clear;
 clc;
 
 %% path settings
-pilot = 'pilot ii';
+pilot = 'pilot i';
 root_path = fullfile(dropboxdir,...
-    'data','fr','humans','vmu24',pilot);
+    'data','fr','humans','vmu24');
 gaped_path = fullfile(root_path,'gaped');
-data_path = fullfile(root_path,'cohorts');
-
-%% tutorial exclusion
-tutorial_length = 44;
+data_path = fullfile(root_path,'data',pilot);
 
 %% parse image data
 gaped_image_dir = dir([gaped_path,filesep,'*.png']);
@@ -24,18 +21,12 @@ image_ids = cell(n_images,1);
 image_types = cell(n_images,1);
 image_valence = nan(n_images,1);
 image_arousal = nan(n_images,1);
-image_intensity = nan(n_images,1);
 
 % iterate through images
 for ii = 1 : n_images
-    progressreport(ii,n_images,'extracting image metrics');
     image_name = image_names{ii};
     uscore_idcs = regexp(image_name,'_');
-    if strcmpi(pilot,'pilot i')
-        image_ids{ii} = image_name(uscore_idcs(4)+1:end);
-    elseif strcmpi(pilot,'pilot ii')
-        image_ids{ii} = image_name;
-    end
+    image_ids{ii} = image_name(uscore_idcs(4)+1:end);
     image_metadata = strsplit(image_name,'_');
     image_types{ii} = lower(image_metadata{1});
     try
@@ -48,9 +39,6 @@ for ii = 1 : n_images
     catch
         image_arousal(ii) = nan;
     end
-    image_file = fullfile(gaped_image_dir(ii).folder,gaped_image_dir(ii).name);
-    I = imread(image_file);
-    image_intensity(ii) = nanmean(I,'all');
 end
 
 % parse image types;
@@ -66,8 +54,11 @@ n_cohorts = numel(data_dir);
 
 %% utility function handles
 getimagestat = @(I,S) ...
-    arrayfun(@(x)S(ismember(image_names,x)),I,...
+    arrayfun(@(x)S(ismember(image_ids,x)),I,...
     'uniformoutput',true);
+getimagestat2 = @(I,S) ...
+    arrayfun(@(x)S(ismember(image_ids,x)),I,...
+    'uniformoutput',false);
 
 %% parse & pool data across cohorts and subjects
 
@@ -110,7 +101,7 @@ for ii = 1 : n_cohorts
         end
 
         %% parse behavioral data
-        bhv = bhv(1+tutorial_length:end,:);
+        bhv = bhv(33:end,:);
         n_trials = size(bhv,1);
         trial_idcs = (1 : n_trials)';
         drawn_stimuli = bhv.stimulus;
@@ -134,8 +125,7 @@ for ii = 1 : n_cohorts
             getimagestat(drawn_images,image_types),...
             getimagestat(drawn_images,image_valence),...
             getimagestat(drawn_images,image_arousal),...
-            getimagestat(drawn_images,image_intensity),...
-            'variablenames',{'duration','category','valence','arousal','intensity'});
+            'variablenames',{'duration','category','valence','arousal'});
         choice_table = table(...
             choice_premature,...
             choice_left,...

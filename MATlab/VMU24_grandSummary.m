@@ -4,19 +4,19 @@ clear;
 clc;
 
 %% selection settings
+pilot = 'pilot ii';
 institute = 'vmu';
 selected_types = {'dogs','wolves'};
-% selected_types = {'horses','zebras'};
+selected_types = {'horses','zebras'};
 selected_types = {'negative','neutral','positive'};
 selected_types = {'dogs','horses','negative','neutral','positive','zebras','wolves'};
 trial_cutoff = inf;
 
 %% path settings
 root_path = fullfile(dropboxdir,...
-    'data','fr','humans','vmu24');
-bhv_path = fullfile(root_path,'data',institute,'behavior');
-mouse_path = fullfile(root_path,'data',institute,'mouse trajectories');
+    'data','fr','humans','vmu24',pilot);
 gaped_path = fullfile(root_path,'gaped');
+bhv_path = fullfile(root_path,'cohorts',institute,'behavior');
 
 %% session selection
 filter_spec = '*.csv';
@@ -48,12 +48,18 @@ image_ids = cell(n_images,1);
 image_types = cell(n_images,1);
 image_valence = nan(n_images,1);
 image_arousal = nan(n_images,1);
+image_intensity = nan(n_images,1);
 
 % iterate through images
 for ii = 1 : n_images
+    progressreport(ii,n_images,'extracting image metrics');
     image_name = image_names{ii};
     uscore_idcs = regexp(image_name,'_');
-    image_ids{ii} = image_name(uscore_idcs(4)+1:end);
+    if strcmpi(pilot,'pilot i')
+        image_ids{ii} = image_name(uscore_idcs(4)+1:end);
+    elseif strcmpi(pilot,'pilot ii')
+        image_ids{ii} = image_name;
+    end
     image_metadata = strsplit(image_name,'_');
     image_types{ii} = lower(image_metadata{1});
     try
@@ -66,6 +72,9 @@ for ii = 1 : n_images
     catch
         image_arousal(ii) = nan;
     end
+    image_file = fullfile(gaped_image_dir(ii).folder,gaped_image_dir(ii).name);
+    I = imread(image_file);
+    image_intensity(ii) = nanmean(I,'all');
 end
 
 % parse image types;
@@ -75,7 +84,11 @@ n_types = numel(type_set);
 
 %% cluster image scores
 n_clusters = 4;
-image_clusters = kmeans([image_valence,image_arousal],n_clusters);
+image_clusters = kmeans([...
+    ...image_valence,...
+    ...image_arousal,...
+    image_intensity,...
+    ],n_clusters);
 mus = nan(n_clusters,2);
 for kk = 1 : n_clusters
     cluster_flags = image_clusters == kk;
@@ -140,6 +153,12 @@ for ii = 1 : n_rows
     ylabel(sps(2+(ii-1)*n_cols),'Proportion of long choices');
     ylabel(sps(3+(ii-1)*n_cols),'Choice time (s)');
     % ylabel(sps(4+(ii-1)*n_cols),'Movement time (s)');
+    zlabel(sps(1+(ii-1)*n_cols),'Intensity (a.u.)');
+end
+
+% 3D axes view
+for ii = 1 : n_rows
+    set(sps(1+(ii-1)*n_cols),'view',[45,45]);
 end
 
 %% utility function handles
@@ -157,6 +176,7 @@ subject_movementtimes = cell(n_subjects,1);
 subject_choicetimes = cell(n_subjects,1);
 subject_valence = cell(n_subjects,1);
 subject_arousal = cell(n_subjects,1);
+subject_intensity = cell(n_subjects,1);
 subject_clusters = cell(n_subjects,1);
 subject_types = cell(n_subjects,1);
 
@@ -186,7 +206,7 @@ for ss = 1 : n_subjects
     choice_correct = bhv.choiceCorrect;
     drawn_images = bhv.image;
     valid_flags = ...
-        trial_idcs > 20 & trial_idcs < trial_cutoff & ...
+        trial_idcs > 44 & trial_idcs < trial_cutoff & ...
         ~isnan(choice_long) & ...
         ismember(choice_long,[0,1]) & ...
         choice_time < quantile(choice_time,.99);
@@ -228,6 +248,7 @@ for ss = 1 : n_subjects
     subject_choicetimes{ss} = choice_time(valid_flags);
     subject_valence{ss} = getimagestat(drawn_images(valid_flags),image_valence);
     subject_arousal{ss} = getimagestat(drawn_images(valid_flags),image_arousal);
+    subject_intensity{ss} = getimagestat(drawn_images(valid_flags),image_intensity);
     subject_clusters{ss} = getimagestat(drawn_images(valid_flags),image_clusters);
     subject_types{ss} = getimagestat(drawn_images(valid_flags),image_types);
 end
@@ -240,6 +261,7 @@ pool_movementtimes = vertcat(subject_movementtimes{:});
 pool_choicetimes = vertcat(subject_choicetimes{:});
 pool_valence = vertcat(subject_valence{:});
 pool_arousal = vertcat(subject_arousal{:});
+pool_intensity = vertcat(subject_intensity{:});
 pool_clusters = vertcat(subject_clusters{:});
 pool_types = vertcat(subject_types{:});
 
@@ -316,11 +338,22 @@ for kk = 1 : n_clusters
     end
 
     %% plot joint distribution of valence & arousal scores
-    grapeplot(pool_valence(cluster_flags),pool_arousal(cluster_flags),...
+%     grapeplot(pool_valence(cluster_flags),pool_arousal(cluster_flags),...
+%         'markeredgecolor',bg_clr,...
+%         'markerfacecolor',cluster_clrs(kk,:),...
+%         'markersize',5,...
+%         'linewidth',1.5,...
+%         'parent',sps(1));
+    plot3(...
+        pool_valence(cluster_flags),...
+        pool_arousal(cluster_flags),...
+        pool_intensity(cluster_flags),...
+        'marker','o',...
         'markeredgecolor',bg_clr,...
         'markerfacecolor',cluster_clrs(kk,:),...
-        'markersize',5,...
+        'markersize',7.5,...
         'linewidth',1.5,...
+        'linestyle','none',...
         'parent',sps(1));
 
     %% plot psychometric performance
@@ -437,13 +470,24 @@ for kk = 1 : n_types
     end
 
     %% plot joint distribution of valence & arousal scores
-    grapeplot(pool_valence(type_flags),pool_arousal(type_flags),...
+%     grapeplot(pool_valence(type_flags),pool_arousal(type_flags),...
+%         'markeredgecolor',bg_clr,...
+%         'markerfacecolor',type_clrs(kk,:),...
+%         'markersize',5,...
+%         'linewidth',1.5,...
+%         'parent',sps(1+n_cols));
+    plot3(...
+        pool_valence(type_flags),...
+        pool_arousal(type_flags),...
+        pool_intensity(type_flags),...
+        'marker','o',...
         'markeredgecolor',bg_clr,...
         'markerfacecolor',type_clrs(kk,:),...
-        'markersize',5,...
+        'markersize',7.5,...
         'linewidth',1.5,...
+        'linestyle','none',...
         'parent',sps(1+n_cols));
-
+    
     %% plot psychometric performance
     errorbar(sps(2+n_cols),stimulus_set,psy.y./psy.n,psy.err,...
         'color',type_clrs(kk,:),...

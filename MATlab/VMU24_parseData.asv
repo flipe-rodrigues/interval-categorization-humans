@@ -28,7 +28,6 @@ image_intensity = nan(n_images,1);
 
 % iterate through images
 for ii = 1 : n_images
-    progressreport(ii,n_images,'extracting image metrics');
     image_name = image_names{ii};
     uscore_idcs = regexp(image_name,'_');
     if strcmpi(pilot,'pilot i')
@@ -48,9 +47,10 @@ for ii = 1 : n_images
     catch
         image_arousal(ii) = nan;
     end
+    
     image_file = fullfile(gaped_image_dir(ii).folder,gaped_image_dir(ii).name);
     I = imread(image_file);
-    image_intensity(ii) = nanmean(I,'all');
+    image_intensity = nanmean(I,'all');
 end
 
 % parse image types;
@@ -134,8 +134,7 @@ for ii = 1 : n_cohorts
             getimagestat(drawn_images,image_types),...
             getimagestat(drawn_images,image_valence),...
             getimagestat(drawn_images,image_arousal),...
-            getimagestat(drawn_images,image_intensity),...
-            'variablenames',{'duration','category','valence','arousal','intensity'});
+            'variablenames',{'duration','category','valence','arousal','intensity});
         choice_table = table(...
             choice_premature,...
             choice_left,...
