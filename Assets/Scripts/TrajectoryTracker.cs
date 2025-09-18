@@ -4,17 +4,18 @@ using System.Collections.Generic;
 
 public class TrajectoryTracker : MonoBehaviour
 {
-    public List<float[]> MouseTrajectory { get; private set; }
+    public List<float[]> MouseTrajectory => _mouseTrajectory;
+
+    private List<float[]> _mouseTrajectory;
 
     private void Start()
     {
-        MouseTrajectory = new List<float[]>();
+        _mouseTrajectory = new List<float[]>();
     }
 
     void FixedUpdate()
     {
         Vector2 p = Input.mousePosition;
-
         float leftMouseButton = Input.GetMouseButton(0) ? 1 : 0;
         float rightMouseButton = Input.GetMouseButton(1) ? 1 : 0;
 
@@ -22,11 +23,16 @@ public class TrajectoryTracker : MonoBehaviour
 
         entry = new float[] { p.x, p.y, leftMouseButton, rightMouseButton, TaskManager.Instance.TrialCounter, Time.timeSinceLevelLoad };
 
-        MouseTrajectory.Add(entry);
+        _mouseTrajectory.Add(entry);
     }
 
     public void SyncPulse(float[] entry)
     {
-        MouseTrajectory.Add(entry);
+        if (_mouseTrajectory == null || _mouseTrajectory.Count == 0)
+        {
+            _mouseTrajectory = new List<float[]>();
+        }
+
+        _mouseTrajectory.Add(entry);
     }
 }

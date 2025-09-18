@@ -87,10 +87,11 @@ public class StimulusPanelBhv : MonoBehaviour
         {
             string imagePath = Path.Combine("GAPED", Regex.Replace(entry["file_name"], Regex.Escape(".png"), "", RegexOptions.IgnoreCase));
             Texture2D image = Resources.Load<Texture2D>(imagePath);
-            float duration = float.Parse(entry["duration"]) / 1e3f;
+            float preStimulusDelay = float.Parse(entry["preStimulusDelay"]) / 1e3f;
+            float stimulusDuration = float.Parse(entry["stimulusDuration"]) / 1e3f;
             float interTrialInterval = float.Parse(entry["iti"]) / 1e3f;
             Phase phase = int.Parse(entry["phase"]) == 3 ? Phase.Test : Phase.Train;
-            Stimulus stimulus = new Stimulus(image, duration, interTrialInterval, phase);
+            Stimulus stimulus = new Stimulus(image, preStimulusDelay, stimulusDuration, interTrialInterval, phase);
             _allStimuli.Add(stimulus);
         }
     }
@@ -116,6 +117,20 @@ public class StimulusPanelBhv : MonoBehaviour
     public void LightsOff()
     {
         this.EmissionColor = Color.clear;
+    }
+
+    public void Scramble()
+    {
+        _renderer.material.SetTexture("_MainTex", _currentStimulus.ScrambledImage);
+        _renderer.material.SetTexture("_EmissionMap", _currentStimulus.ScrambledImage);
+        _transform.localScale = new Vector3(_currentStimulus.ScrambledImage.width / (float)_currentStimulus.ScrambledImage.height, 1, 1);
+    }
+
+    public void Unscramble()
+    {
+        _renderer.material.SetTexture("_MainTex", _currentStimulus.Image);
+        _renderer.material.SetTexture("_EmissionMap", _currentStimulus.Image);
+        _transform.localScale = new Vector3(_currentStimulus.Image.width / (float)_currentStimulus.Image.height, 1, 1);
     }
 
     public string GetImgName()

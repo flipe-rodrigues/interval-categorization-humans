@@ -144,16 +144,25 @@ public class TaskManager : Singleton<TaskManager>
         _initiationButton.IsActive = false;
         _initiationButton.ContactEnd();
 
+        //stimulusPanel.Scramble();
+        //stimulusPanel.LightsOn();
+
+        yield return new WaitForSeconds(stimulusPanel.CurrentStimulus.PreStimulusDelay);
+        trajectoryTracker.SyncPulse(new float[] { -250, -250, -250, -250, -250, Time.timeSinceLevelLoad });
+        keyPressTracker.SyncPulse(-250);
+
         stimulusPanel.LightsOn();
+        //stimulusPanel.Unscramble();
+
         //_initiationButton.LightsOff();
         //_shortButton.LightsOff();
         //_longButton.LightsOff();
 
-        float duration = stimulusPanel.CurrentStimulus.Duration;
-        float choiceTime = Time.timeSinceLevelLoad + duration;
+        float duration = stimulusPanel.CurrentStimulus.StimulusDuration;
+        float stimulusOffsetTime = Time.timeSinceLevelLoad + duration;
         float iti = stimulusPanel.CurrentStimulus.InterTrialInterval;
 
-        while (Time.timeSinceLevelLoad < choiceTime)
+        while (Time.timeSinceLevelLoad < stimulusOffsetTime)
         {
             if (_longButton.IsPressed || _shortButton.IsPressed || (!_initiationButton.IsPressed && isFixationRequired))
             {
@@ -286,5 +295,20 @@ public class TaskManager : Singleton<TaskManager>
         yield return new WaitForSeconds(iti - _feedbackDisplayDuration);
 
         _ongoingTrial = stimulusPanel.Check4Quits();
+    }
+
+    public static float SampleTruncatedExponentialByMean(float mean, float a, float b)
+    {
+        if (mean <= 0f) throw new System.ArgumentException("Mean must be > 0");
+        if (b <= a) throw new System.ArgumentException("Upper bound must be greater than lower bound");
+
+        float lambda = 1f / mean; // convert mean to rate
+        float u = Random.value;   // Uniform random [0,1]
+
+        float expA = Mathf.Exp(-lambda * a);
+        float expB = Mathf.Exp(-lambda * b);
+
+        float sample = -Mathf.Log(expA - u * (expA - expB)) / lambda;
+        return sample;
     }
 }

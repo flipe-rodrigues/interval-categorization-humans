@@ -5,10 +5,10 @@ clc;
 
 %% selection settings
 pilot = 'pilot ii';
-institute = 'vmu';
-selected_types = {'dogs','wolves'};
-selected_types = {'horses','zebras'};
-selected_types = {'negative','neutral','positive'};
+institute = 'ccu';
+% selected_types = {'dogs','wolves'};
+% selected_types = {'horses','zebras'};
+% selected_types = {'negative','neutral','positive'};
 selected_types = {'dogs','horses','negative','neutral','positive','zebras','wolves'};
 trial_cutoff = inf;
 
@@ -83,10 +83,10 @@ type_set = unique(image_types(ismember(image_types,selected_types)));
 n_types = numel(type_set);
 
 %% cluster image scores
-n_clusters = 4;
+n_clusters = 3;
 image_clusters = kmeans([...
-    image_valence,...
-    image_arousal,...
+    ...image_valence,...
+    ...image_arousal,...
     image_intensity,...
     ],n_clusters);
 mus = nan(n_clusters,2);
@@ -194,7 +194,12 @@ for ss = 1 : n_subjects
     subject_age = substrs{2};
     subject_handedness = substrs{3};
     session_date =  strjoin(substrs(7:end-1),'_');
-
+    
+    % !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if contains(subject_name(1:4),'K')
+        continue;
+    end
+    
     %% parse behavioral data
     n_trials = size(bhv,1);
     trial_idcs = (1 : n_trials)';
@@ -205,7 +210,7 @@ for ss = 1 : n_subjects
     choice_long = bhv.choiceLong;
     choice_correct = bhv.choiceCorrect;
     drawn_images = bhv.image;
-    valid_flags = ...
+    valid_flags = ...        
         trial_idcs > 44 & trial_idcs < trial_cutoff & ...
         ~isnan(choice_long) & ...
         ismember(choice_long,[0,1]) & ...
