@@ -74,7 +74,7 @@ public class WriteData2CSV : MonoBehaviour
             return;
         }
 
-        string bhvHdr = "stimulus, reactionTime, movementTime, choiceLeft,  choiceLong, choiceCorrect, interTrialInterval, image";
+        string bhvHdr = "preStimulusDelay, stimulusDuration, reactionTime, movementTime, choiceLeft,  choiceLong, choiceCorrect, interTrialInterval, image";
         _swBhv.WriteLine(bhvHdr);
         _swBhv.Flush();
 
@@ -87,14 +87,14 @@ public class WriteData2CSV : MonoBehaviour
         _swKeyPress.Flush();
     }
 
-    public void WriteBhvTrial(float stim, float rt, float mt, int choiceLeft, int choiceLong, int choiceCorrect, float interTrialInterval, string imgName)
+    public void WriteBhvTrial(float preStimulusDelay, float stimulusDuration, float reactionTime, float movementTime, int choiceLeft, int choiceLong, int choiceCorrect, float interTrialInterval, string imgName)
     {
         if (!saveData)
         {
             return;
         }
 
-        string data = stim + "," + rt + "," + mt + "," + choiceLeft + "," + choiceLong + "," + choiceCorrect + "," + interTrialInterval + "," + imgName;
+        string data = preStimulusDelay + "," + stimulusDuration + "," + reactionTime + "," + movementTime + "," + choiceLeft + "," + choiceLong + "," + choiceCorrect + "," + interTrialInterval + "," + imgName;
         _swBhv.WriteLine(data);
         _swBhv.Flush();
     }

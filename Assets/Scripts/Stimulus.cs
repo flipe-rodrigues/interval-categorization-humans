@@ -5,14 +5,12 @@ using UnityEngine;
 public class Stimulus
 {
     public Texture2D Image { get { return _image; } }
-    public Texture2D ScrambledImage { get { return _scrambledImage; } }
     public float PreStimulusDelay { get { return _preStimulusDelay; } }
     public float StimulusDuration { get { return _stimulusDuration; } }
     public float InterTrialInterval { get { return _interTrialInterval; } }
     public Phase Phase { get { return _phase; } }
 
     [SerializeField] private Texture2D _image;
-    [SerializeField] private Texture2D _scrambledImage;
     [SerializeField] private float _preStimulusDelay;
     [SerializeField] private float _stimulusDuration;
     [SerializeField] private float _interTrialInterval;
@@ -20,12 +18,28 @@ public class Stimulus
 
     public Stimulus(Texture2D image, float preStimulusDelay, float stimulusDuration, float interTrialInterval, Phase phase)
     {
-        _image = MakeTextureReadable(image);
-        _scrambledImage = ScrambleTexture(_image);
+        _image = image;
         _preStimulusDelay = preStimulusDelay;
         _stimulusDuration = stimulusDuration;
         _interTrialInterval = interTrialInterval;
         _phase = phase;
+    }
+
+    public Texture2D MakeGrayTexture(Texture2D original)
+    {
+        Texture2D grayTex = new Texture2D(original.width, original.height, original.format, false);
+
+        // Fill with a uniform gray (50% brightness)
+        Color[] pixels = new Color[original.width * original.height];
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            pixels[i] = Color.gray; // Unity's built-in mid-gray (0.5, 0.5, 0.5, 1)
+        }
+
+        grayTex.SetPixels(pixels);
+        grayTex.Apply();
+
+        return grayTex;
     }
 
     private Texture2D MakeTextureReadable(Texture2D original)

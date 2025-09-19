@@ -16,6 +16,7 @@ public class FeedbackBhv : MonoBehaviour {
 
     [Range(1, 100)]
     public float changeSpeed = 25f;
+    public Texture waitFeedbackTexture;
     public Texture positiveFeedbackTexture;
     public Texture negativeFeedbackTexture;
     public Texture abortFeedbackTexture;
@@ -45,6 +46,13 @@ public class FeedbackBhv : MonoBehaviour {
     {
         this.EmissionMap = TaskManager.Instance.Phase == Phase.Test ? unknownFeedbackTexture : positiveFeedbackTexture;
         _targetColor = TaskManager.Instance.Phase == Phase.Test ? Color.white : Color.green;
+        _targetIntensity = 1;
+    }
+
+    public void Wait()
+    {
+        this.EmissionMap = waitFeedbackTexture;
+        _targetColor = Color.gray;
         _targetIntensity = 1;
     }
 

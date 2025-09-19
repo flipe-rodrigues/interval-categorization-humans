@@ -99,7 +99,7 @@ public class StimulusPanelBhv : MonoBehaviour
     public void DrawNextStimulus()
     {
         _currentStimulus = _allStimuli[_stimulusIndex];
-        _renderer.material.SetTexture("_MainTex", _currentStimulus.Image);
+        _renderer.material.SetColor("_BaseColor", Color.white);
         _renderer.material.SetTexture("_EmissionMap", _currentStimulus.Image);
         _transform.localScale = new Vector3(_currentStimulus.Image.width / (float)_currentStimulus.Image.height, 1, 1);
     }
@@ -117,20 +117,6 @@ public class StimulusPanelBhv : MonoBehaviour
     public void LightsOff()
     {
         this.EmissionColor = Color.clear;
-    }
-
-    public void Scramble()
-    {
-        _renderer.material.SetTexture("_MainTex", _currentStimulus.ScrambledImage);
-        _renderer.material.SetTexture("_EmissionMap", _currentStimulus.ScrambledImage);
-        _transform.localScale = new Vector3(_currentStimulus.ScrambledImage.width / (float)_currentStimulus.ScrambledImage.height, 1, 1);
-    }
-
-    public void Unscramble()
-    {
-        _renderer.material.SetTexture("_MainTex", _currentStimulus.Image);
-        _renderer.material.SetTexture("_EmissionMap", _currentStimulus.Image);
-        _transform.localScale = new Vector3(_currentStimulus.Image.width / (float)_currentStimulus.Image.height, 1, 1);
     }
 
     public string GetImgName()

@@ -106,7 +106,7 @@ public class TaskManager : Singleton<TaskManager>
 
     private void Update()
     {
-        if (!_ongoingTrial && Time.timeSinceLevelLoad > 3.8f)
+        if (!_ongoingTrial && Time.timeSinceLevelLoad > 1f)
         {
             StartCoroutine(this.TaskCoroutine());
         }
@@ -115,6 +115,8 @@ public class TaskManager : Singleton<TaskManager>
     private IEnumerator TaskCoroutine()
     {
         _ongoingTrial = true;
+
+        Debug.Log("Trial Available");
 
         stimulusPanel.DrawNextStimulus();
 
@@ -138,29 +140,65 @@ public class TaskManager : Singleton<TaskManager>
         {
             yield return null;
         }
+
+        Debug.Log("Trial Initiation");
+
+        float preStimulusDelay = stimulusPanel.CurrentStimulus.PreStimulusDelay;
+        float stimulusOnsetTime = Time.timeSinceLevelLoad + preStimulusDelay;
+        float stimulusDuration = stimulusPanel.CurrentStimulus.StimulusDuration;
+        float stimulusOffsetTime = stimulusOnsetTime + stimulusDuration;
+        float iti = stimulusPanel.CurrentStimulus.InterTrialInterval;
+
         trajectoryTracker.SyncPulse(new float[] { -200, -200, -200, -200, -200, Time.timeSinceLevelLoad });
         keyPressTracker.SyncPulse(-200);
 
         _initiationButton.IsActive = false;
         _initiationButton.ContactEnd();
 
-        //stimulusPanel.Scramble();
-        //stimulusPanel.LightsOn();
+        feedbackPanel.Wait();
 
-        yield return new WaitForSeconds(stimulusPanel.CurrentStimulus.PreStimulusDelay);
+        while (Time.timeSinceLevelLoad < stimulusOnsetTime)
+        {
+            if (_longButton.IsPressed || _shortButton.IsPressed || (!_initiationButton.IsPressed && isFixationRequired))
+            {
+                stimulusPanel.LightsOff();
+
+                _shortButton.IsActive = false;
+                _longButton.IsActive = false;
+                _shortButton.ContactEnd();
+                _longButton.ContactEnd();
+
+                feedbackPanel.Abort();
+
+                Debug.Log("Trial Aborted");
+
+                _fileHandler.WriteBhvTrial(preStimulusDelay, stimulusDuration, -2, -2, -2, -2, -2, -2, stimulusPanel.GetImgName());
+                _fileHandler.WriteTrackingTrial();
+                _fileHandler.WriteKeyPressTrial();
+
+                yield return new WaitForSeconds(_feedbackDisplayDuration);
+
+                feedbackPanel.Neutral();
+
+                yield return new WaitForSeconds(iti - _feedbackDisplayDuration);
+
+                _ongoingTrial = stimulusPanel.Check4Quits();
+
+                yield break;
+            }
+            yield return null;
+        }
+        Debug.Log("Stimulus Onset");
+
         trajectoryTracker.SyncPulse(new float[] { -250, -250, -250, -250, -250, Time.timeSinceLevelLoad });
         keyPressTracker.SyncPulse(-250);
 
+        feedbackPanel.Neutral();
         stimulusPanel.LightsOn();
-        //stimulusPanel.Unscramble();
 
         //_initiationButton.LightsOff();
         //_shortButton.LightsOff();
         //_longButton.LightsOff();
-
-        float duration = stimulusPanel.CurrentStimulus.StimulusDuration;
-        float stimulusOffsetTime = Time.timeSinceLevelLoad + duration;
-        float iti = stimulusPanel.CurrentStimulus.InterTrialInterval;
 
         while (Time.timeSinceLevelLoad < stimulusOffsetTime)
         {
@@ -185,7 +223,9 @@ public class TaskManager : Singleton<TaskManager>
                     _abortedPreviousTrial = true;
                 }
 
-                _fileHandler.WriteBhvTrial(duration, -1, -1, -1, -1, -1, -1, stimulusPanel.GetImgName());
+                Debug.Log("Trial Aborted");
+
+                _fileHandler.WriteBhvTrial(preStimulusDelay, stimulusDuration, -1, -1, -1, -1, -1, -1, stimulusPanel.GetImgName());
                 _fileHandler.WriteTrackingTrial();
                 _fileHandler.WriteKeyPressTrial();
 
@@ -201,6 +241,8 @@ public class TaskManager : Singleton<TaskManager>
             }
             yield return null;
         }
+
+        Debug.Log("Stimulus Offset");
 
         float reactionTime = Time.timeSinceLevelLoad;
 
@@ -218,6 +260,8 @@ public class TaskManager : Singleton<TaskManager>
         trajectoryTracker.SyncPulse(new float[] { -300, -300, -300, -300, -300, Time.timeSinceLevelLoad });
         keyPressTracker.SyncPulse(-300);
 
+        Debug.Log("Reaction");
+
         reactionTime = Time.timeSinceLevelLoad - reactionTime;
 
         float movementTime = Time.timeSinceLevelLoad;
@@ -226,6 +270,9 @@ public class TaskManager : Singleton<TaskManager>
         {
             yield return null;
         }
+
+        Debug.Log("Choice");
+
         trajectoryTracker.SyncPulse(new float[] { -400, -400, -400, -400, -400, Time.timeSinceLevelLoad });
         keyPressTracker.SyncPulse(-400);
 
@@ -240,7 +287,7 @@ public class TaskManager : Singleton<TaskManager>
         int choiceLong;
         int choiceCorrect;
 
-        if (duration == categoryBoundary)
+        if (stimulusDuration == categoryBoundary)
         {
             int die = Random.Range(0, 2);
             if (die == 0)
@@ -257,8 +304,8 @@ public class TaskManager : Singleton<TaskManager>
             }
         }
 
-        else if (_longButton.IsPressed && duration < categoryBoundary ||
-                 _shortButton.IsPressed && duration > categoryBoundary)
+        else if (_longButton.IsPressed && stimulusDuration < categoryBoundary ||
+                 _shortButton.IsPressed && stimulusDuration > categoryBoundary)
         {
             choiceLong = _longButton.IsPressed ? 1 : 0;
             choiceCorrect = 0;
@@ -278,7 +325,7 @@ public class TaskManager : Singleton<TaskManager>
         //_longButton.LightsOff();
         //_shortButton.LightsOff();
 
-        _fileHandler.WriteBhvTrial(duration, reactionTime, movementTime, choiceLeft, choiceLong, choiceCorrect, stimulusPanel.CurrentStimulus.InterTrialInterval, stimulusPanel.GetImgName());
+        _fileHandler.WriteBhvTrial(preStimulusDelay, stimulusDuration, reactionTime, movementTime, choiceLeft, choiceLong, choiceCorrect, stimulusPanel.CurrentStimulus.InterTrialInterval, stimulusPanel.GetImgName());
         _fileHandler.WriteTrackingTrial();
         _fileHandler.WriteKeyPressTrial();
 
@@ -295,20 +342,5 @@ public class TaskManager : Singleton<TaskManager>
         yield return new WaitForSeconds(iti - _feedbackDisplayDuration);
 
         _ongoingTrial = stimulusPanel.Check4Quits();
-    }
-
-    public static float SampleTruncatedExponentialByMean(float mean, float a, float b)
-    {
-        if (mean <= 0f) throw new System.ArgumentException("Mean must be > 0");
-        if (b <= a) throw new System.ArgumentException("Upper bound must be greater than lower bound");
-
-        float lambda = 1f / mean; // convert mean to rate
-        float u = Random.value;   // Uniform random [0,1]
-
-        float expA = Mathf.Exp(-lambda * a);
-        float expB = Mathf.Exp(-lambda * b);
-
-        float sample = -Mathf.Log(expA - u * (expA - expB)) / lambda;
-        return sample;
     }
 }
