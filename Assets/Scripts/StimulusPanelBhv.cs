@@ -91,6 +91,9 @@ public class StimulusPanelBhv : MonoBehaviour
             float stimulusDuration = float.Parse(entry["stimulusDuration"]) / 1e3f;
             float interTrialInterval = float.Parse(entry["iti"]) / 1e3f;
             Phase phase = int.Parse(entry["phase"]) == 3 ? Phase.Test : Phase.Train;
+
+            interTrialInterval = .6f; // Override ITI for testing purposes !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
             Stimulus stimulus = new Stimulus(image, preStimulusDelay, stimulusDuration, interTrialInterval, phase);
             _allStimuli.Add(stimulus);
         }
